@@ -30,7 +30,7 @@ public class BaseSocketHandler implements TCPProtocol {
 	} else if (port == POP3ProxyServer.ADMIN_PORT) {
 	    
 	} else {
-	   // throw new InvalidPortException("Invalid port: " + new Integer(port).toString());
+	   throw new IOException("Invalid socket local port.");
 	}
 	
     }
@@ -50,7 +50,7 @@ public class BaseSocketHandler implements TCPProtocol {
 	} else if (port == POP3ProxyServer.ADMIN_PORT) {
 	    
 	} else {
-	    //throw new InvalidValue();
+	    throw new IOException("Invalid socket local port.");
 	}
     }
     
@@ -69,32 +69,12 @@ public class BaseSocketHandler implements TCPProtocol {
 	} else if (port == POP3ProxyServer.ADMIN_PORT) {
 	    
 	} else {
-	    //throw new InvalidValue();
+	    throw new IOException("Invalid socket local port.");
 	}
     }
     
     @Override
     public void handleConnect(SelectionKey key) throws IOException {
-	final SocketChannel clientChannel = (SocketChannel)key.attachment();
-	
-	SocketChannel pop3Server = (SocketChannel)key.channel();
-	final POP3SocketState state = new POP3SocketState(clientChannel, pop3Server);
-	
-	try {
-	    
-	    boolean ret = pop3Server.finishConnect();
-	    
-	    if (ret) {
-		state.updateSubscription(key.selector());
-	    } else {
-		state.closeChannels();
-	    }
-	    
-	} catch (IOException e) {
-	    
-	    
-	    
-	}
 	
     }
 }

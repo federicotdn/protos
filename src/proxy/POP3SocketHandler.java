@@ -29,7 +29,7 @@ public class POP3SocketHandler implements TCPProtocol {
 	newClients.add(clientChannel);
 	NewSocketState state = new NewSocketState(clientChannel);
 	
-	clientChannel.register(key.selector(), SelectionKey.OP_READ, state);
+	clientChannel.register(key.selector(), SelectionKey.OP_WRITE, state);
 	
     }
 
@@ -42,7 +42,7 @@ public class POP3SocketHandler implements TCPProtocol {
 	    
 	    System.out.println("client is new");
 	    NewSocketState state = (NewSocketState)key.attachment();
-	    state.handleRead(key.selector());
+	    state.handleRead(key);
 	   
 	} else {
 	    
@@ -53,13 +53,24 @@ public class POP3SocketHandler implements TCPProtocol {
 
     @Override
     public void handleWrite(SelectionKey key) throws IOException {
-	// TODO Auto-generated method stub
+	
+	SocketChannel writeChannel = (SocketChannel)key.channel();
+	
+	if (newClients.contains(writeChannel)) {
+	    
+	    System.out.println("client is new");
+	    NewSocketState state = (NewSocketState)key.attachment();
+	    state.handleWrite(key);
+	    
+	} else  {
+	    
+	    
+	}
 	
     }
 
     @Override
     public void handleConnect(SelectionKey key) throws IOException {
-	// TODO Auto-generated method stub
 	
     }
 
