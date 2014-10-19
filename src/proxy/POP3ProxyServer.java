@@ -8,8 +8,6 @@ import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.util.Iterator;
 
-import org.omg.CORBA.DynAnyPackage.InvalidValue;
-
 public class POP3ProxyServer {
     
     public static final int POP3_PORT = 4545;
@@ -40,7 +38,7 @@ public class POP3ProxyServer {
 	popListenChannel.configureBlocking(false);
     }
     
-    public void begin() throws IOException, InvalidValue {
+    public void begin() throws IOException {
 	
 	popListenChannel.register(selector, SelectionKey.OP_ACCEPT);
 	
