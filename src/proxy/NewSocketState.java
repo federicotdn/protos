@@ -7,8 +7,11 @@ import java.nio.channels.SocketChannel;
 
 public class NewSocketState {
     
-    private ByteBuffer buffer;
+    private ByteBuffer outBuffer;
+    private ByteBuffer inBuffer;
     private SocketChannel channel;
+    
+    private String greeting = "+OK POP3 server ready";
     
     private static int BUF_SIZE = 1024;
     
@@ -18,7 +21,11 @@ public class NewSocketState {
 	}
 	
 	this.channel = channel;
-	buffer = ByteBuffer.allocate(BUF_SIZE);
+	inBuffer = ByteBuffer.allocate(BUF_SIZE);
+	outBuffer = ByteBuffer.allocate(BUF_SIZE);
+    }
+    
+    public void handleWrite(Selector selector) {
 	
     }
     
@@ -26,9 +33,15 @@ public class NewSocketState {
 	
 	//todavia no estamos conectados a ningun servidor POP3
 	//TODO: manejar CAPA
-	channel.read(buffer);
-	String[] message = buffer.toString().split("\\s+");
+	channel.read(inBuffer);
+	byte[] bytes = inBuffer.array();
 	
+	String[] msg = new String(bytes).split("\\s+");
+	for (String part : msg) {
+	    
+	    System.out.println(part);
+	    
+	}
     }
     
 }

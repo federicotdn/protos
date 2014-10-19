@@ -18,7 +18,7 @@ public class POP3ProxyServer {
     private POP3ServerConfig config;
     
     private Selector selector;
-    private SocketHandler socketHandler;
+    private BaseSocketHandler socketHandler;
     
     private ServerSocketChannel popListenChannel;
     private ServerSocketChannel adminListenChannel;
@@ -33,7 +33,7 @@ public class POP3ProxyServer {
     public void init() throws IOException {
 	
 	selector = Selector.open();
-	socketHandler = new SocketHandler(config);
+	socketHandler = new BaseSocketHandler(config);
 	
 	popListenChannel = ServerSocketChannel.open();
 	popListenChannel.socket().bind(new InetSocketAddress(POP3_PORT));
