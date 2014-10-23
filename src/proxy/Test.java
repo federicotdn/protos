@@ -6,7 +6,7 @@ public class Test {
 
     public static void main(String[] args) {
 	System.out.println("Hello, World!");
-	POP3ProxyServer server = new POP3ProxyServer();
+	ProxyServer server = new ProxyServer();
 	
 	try {
 	    

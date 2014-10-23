@@ -1,4 +1,4 @@
-package proxy;
+package pop3;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;

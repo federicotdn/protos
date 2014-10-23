@@ -1,5 +1,5 @@
 package pop3;
 
-public enum NewClientStatus {
+public enum POP3StateValues {
     NEW, ERROR
 }
