@@ -10,36 +10,42 @@ import java.util.Set;
 import proxy.TCPProtocol;
 
 public class POP3SocketHandler implements TCPProtocol {
-	
-	@Override
-	public void handleAccept(SelectionKey key) throws IOException {
 
-		ServerSocketChannel listenChannel = (ServerSocketChannel) key.channel();
+    private POP3CommandParser pop3Parser;
 
-		System.out.println("Handle Accept");
+    public POP3SocketHandler() {
 
-		SocketChannel clientChannel = listenChannel.accept();
-		clientChannel.configureBlocking(false);
+    }
 
-	}
+    @Override
+    public void handleAccept(SelectionKey key) throws IOException {
 
-	@Override
-	public void handleRead(SelectionKey key) throws IOException {
+	ServerSocketChannel listenChannel = (ServerSocketChannel) key.channel();
 
-		SocketChannel readChannel = (SocketChannel) key.channel();
+	System.out.println("Handle Accept");
 
-	}
+	SocketChannel clientChannel = listenChannel.accept();
+	clientChannel.configureBlocking(false);
 
-	@Override
-	public void handleWrite(SelectionKey key) throws IOException {
+    }
 
-		SocketChannel writeChannel = (SocketChannel) key.channel();
+    @Override
+    public void handleRead(SelectionKey key) throws IOException {
 
-	}
+	SocketChannel readChannel = (SocketChannel) key.channel();
 
-	@Override
-	public void handleConnect(SelectionKey key) throws IOException {
+    }
 
-	}
+    @Override
+    public void handleWrite(SelectionKey key) throws IOException {
+
+	SocketChannel writeChannel = (SocketChannel) key.channel();
+
+    }
+
+    @Override
+    public void handleConnect(SelectionKey key) throws IOException {
+
+    }
 
 }
