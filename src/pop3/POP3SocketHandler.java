@@ -5,21 +5,19 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
-import java.util.HashSet;
-import java.util.Set;
 
-import proxy.ServerConfig;
+import proxy.ServerState;
 import proxy.TCPProtocol;
 
 public class POP3SocketHandler implements TCPProtocol {
 
     private POP3CommandParser pop3Parser;
-    private ServerConfig serverConfig;
+    private ServerState serverState;
 
-    public POP3SocketHandler(ServerConfig serverConfig) throws IOException {
+    public POP3SocketHandler(ServerState serverState) throws IOException {
 	
 	pop3Parser = new POP3CommandParser("resources/pop3.properties");
-	this.serverConfig = serverConfig;
+	this.serverState = serverState;
     }
 
     @Override
@@ -33,7 +31,9 @@ public class POP3SocketHandler implements TCPProtocol {
 	clientChannel.configureBlocking(false);
 	
 	POP3SocketState socketState = new POP3SocketState(clientChannel);
-	clientChannel.register(key.selector(), SelectionKey.OP_WRITE, socketState);
+	socketState.registerWrite(key.selector());
+	
+	serverState.setSocketHandler(clientChannel, this);
     }
 
     @Override
@@ -46,6 +46,8 @@ public class POP3SocketHandler implements TCPProtocol {
     @Override
     public void handleWrite(SelectionKey key) throws IOException {
 
+	System.out.println("Handle write");
+	
 	SocketChannel writeChannel = (SocketChannel) key.channel();
 	POP3SocketState state = (POP3SocketState) key.attachment();
 	
@@ -60,6 +62,7 @@ public class POP3SocketHandler implements TCPProtocol {
 		ByteBuffer buf = state.writeBufferFor(writeChannel);
 		buf.put(pop3Parser.getCommandString(POP3Command.OK).getBytes());
 		buf.put("\r\n".getBytes());
+		buf.flip();
 		writeChannel.write(buf);
 		key.cancel();
 	    }

@@ -13,9 +13,9 @@ import pop3.POP3SocketHandler;
 import rcp.RCPSocketHandler;
 
 public class ProxyServer {
-
-	private ServerConfig config;
-
+    
+	private ServerState state;
+	
 	private Selector selector;
 
 	private ServerSocketChannel pop3ListenChannel;
@@ -24,28 +24,21 @@ public class ProxyServer {
 	private POP3SocketHandler pop3Handler;
 	private RCPSocketHandler rcpHandler;
 
-	HashMap<SocketChannel, TCPProtocol> socketHandlers;
-
-	public ProxyServer() {
-
-		socketHandlers = new HashMap<SocketChannel, TCPProtocol>();
-		
-	}
-
 	public void init() throws IOException {
 
+		state = new ServerState();
+		
 		selector = Selector.open();
-		config = new ServerConfig();
 		
 		pop3ListenChannel = ServerSocketChannel.open();
-		pop3ListenChannel.socket().bind(config.getPop3Address());
+		pop3ListenChannel.socket().bind(state.getConfig().getPop3Address());
 		pop3ListenChannel.configureBlocking(false);
 		
 		rcpListenChannel = ServerSocketChannel.open();
-		rcpListenChannel.socket().bind(config.getRcpAddress());
+		rcpListenChannel.socket().bind(state.getConfig().getRcpAddress());
 		rcpListenChannel.configureBlocking(false);
 		
-		pop3Handler = new POP3SocketHandler(config);
+		pop3Handler = new POP3SocketHandler(state);
 	}
 
 	public void begin() throws IOException {
@@ -62,6 +55,7 @@ public class ProxyServer {
 				
 				TCPProtocol handler;
 				SelectionKey key = keyIterator.next();
+				ServerConfig config = state.getConfig();
 
 				if (key.isValid() && key.isAcceptable()) {
 
@@ -81,22 +75,22 @@ public class ProxyServer {
 				try {
 
 					if (key.isValid() && key.isReadable()) {
-						handler = getSocketHandler(key);
+						handler = state.getSocketHandler(key);
 						handler.handleRead(key);
 					}
 	
 					if (key.isValid() && key.isWritable()) {
-						handler = getSocketHandler(key);
+						handler = state.getSocketHandler(key);
 						handler.handleWrite(key);
 					}
 	
 					if (key.isValid() && key.isConnectable()) {
-						handler = getSocketHandler(key);
+						handler = state.getSocketHandler(key);
 						handler.handleConnect(key);
 					}
 				
 				} catch (Exception e) { // cambiar tipo de excepcion
-					
+				    	throw new RuntimeException();
 				}
 
 				keyIterator.remove();
@@ -104,16 +98,5 @@ public class ProxyServer {
 
 		}
 
-	}
-	
-	private TCPProtocol getSocketHandler(SelectionKey key) throws Exception { //cambiar tipo de excepcion
-		SelectableChannel channel = key.channel();
-		TCPProtocol handler = socketHandlers.get(channel);
-		
-		if (handler == null) {
-			throw new Exception();
-		}
-		
-		return handler;
 	}
 }

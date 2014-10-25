@@ -19,6 +19,7 @@ public class ServerConfig {
     
     public ServerConfig() throws IOException {
 	
+	properties = new Properties();
 	InputStream fileInput = getClass().getClassLoader().getResourceAsStream(CONFIG_FILE);
 	properties.load(fileInput);
 	
