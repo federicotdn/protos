@@ -9,7 +9,9 @@ public enum POP3Command {
     LIST("list"),
     RETR("retrieve"),
     DELE("delete"),
-    CAPA("capabilities");
+    CAPA("capabilities"),
+    OK("ok"),
+    ERROR("error");
     
     private final String key;
     

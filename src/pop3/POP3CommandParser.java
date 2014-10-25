@@ -16,12 +16,13 @@ public class POP3CommandParser {
     private static String MINLEN_KEY = "min_len";
     
     private Map<String, POP3Command> pop3Commands;
+    Properties properties;
     
     public POP3CommandParser(String protocolFile) throws IOException {
 	
 	pop3Commands = new HashMap<String, POP3Command>();
 	
-	Properties properties = new Properties();
+	properties = new Properties();
 	InputStream fileInput = getClass().getClassLoader().getResourceAsStream(protocolFile);
 	
 	properties.load(fileInput);
@@ -52,6 +53,10 @@ public class POP3CommandParser {
 	}
 	
 	return pop3Command;
+    }
+    
+    public String getCommandString(POP3Command com) {
+	return properties.getProperty(com.getKey());
     }
     
 }

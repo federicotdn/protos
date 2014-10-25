@@ -28,7 +28,6 @@ public class ProxyServer {
 
 	public ProxyServer() {
 
-		config = new ServerConfig();
 		socketHandlers = new HashMap<SocketChannel, TCPProtocol>();
 		
 	}
@@ -36,7 +35,8 @@ public class ProxyServer {
 	public void init() throws IOException {
 
 		selector = Selector.open();
-
+		config = new ServerConfig();
+		
 		pop3ListenChannel = ServerSocketChannel.open();
 		pop3ListenChannel.socket().bind(config.getPop3Address());
 		pop3ListenChannel.configureBlocking(false);
@@ -44,6 +44,8 @@ public class ProxyServer {
 		rcpListenChannel = ServerSocketChannel.open();
 		rcpListenChannel.socket().bind(config.getRcpAddress());
 		rcpListenChannel.configureBlocking(false);
+		
+		pop3Handler = new POP3SocketHandler(config);
 	}
 
 	public void begin() throws IOException {
