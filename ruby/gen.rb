@@ -1,7 +1,7 @@
 require 'faker'
 require 'maildir'
 
-maildir = Maildir.new("/home/fede/Workspace/Maildir/mike@aol.com")
+maildir = Maildir.new(ARGV[0])
 
 5.times do 
 	text = "From: Author #{ Faker::Internet.email }\n"
