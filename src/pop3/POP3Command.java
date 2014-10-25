@@ -21,4 +21,9 @@ public enum POP3Command {
 	return key;
     }
     
+    @Override
+    public String toString() {
+	return key;
+    }
+    
 }

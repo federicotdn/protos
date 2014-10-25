@@ -14,11 +14,13 @@ public class POP3SocketState {
     
     private boolean serverConnected;
     private POP3ProtocolState pop3State;
+    private POP3Command lastCommand;
     
     POP3SocketState(final SocketChannel clientChannel) {
 	
 	serverConnected = false;
 	pop3State = POP3ProtocolState.AUTHORIZATION;
+	lastCommand = null;
 	
         if (clientChannel == null) {
             throw new IllegalArgumentException();

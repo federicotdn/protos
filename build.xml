@@ -1,0 +1,21 @@
+<project name="POP3Proxy" default="compile" basedir=".">
+
+	<property name="src" location="src"/>
+	<property name="bin" location="bin"/>
+
+	<target name="init">
+		<mkdir dir="${bin}"/>
+	</target>
+
+	<target name="copy-resources" depends="init">
+		<mkdir dir="${bin}/resources"/>
+		<copy todir="${bin}/resources">
+			<fileset dir="resources" />
+		</copy>
+	</target>
+
+	<target name="compile" depends="copy-resources">
+		<javac srcdir="${src}" destdir="${bin}"/>
+	</target>
+
+</project>

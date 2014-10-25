@@ -26,6 +26,9 @@ public class POP3SocketHandler implements TCPProtocol {
 
 	SocketChannel clientChannel = listenChannel.accept();
 	clientChannel.configureBlocking(false);
+	
+	POP3SocketState socketState = new POP3SocketState(clientChannel);
+	clientChannel.register(key.selector(), SelectionKey.OP_WRITE, socketState);
 
     }
 
