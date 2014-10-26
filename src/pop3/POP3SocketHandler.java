@@ -14,6 +14,8 @@ public class POP3SocketHandler implements TCPProtocol {
     private POP3CommandParser pop3Parser;
     private ServerState serverState;
 
+    private static int MAX_POP3_REQ_LEN = 255;
+    
     public POP3SocketHandler(ServerState serverState) throws IOException {
 	
 	pop3Parser = new POP3CommandParser("resources/pop3.properties");
@@ -44,8 +46,22 @@ public class POP3SocketHandler implements TCPProtocol {
 	SocketChannel readChannel = (SocketChannel) key.channel();
 	POP3SocketState state = (POP3SocketState) key.attachment();
 	
+	if (state.isClientSocket(readChannel)) {
+	    handleClientRead(key, readChannel, state);
+	} else {
+	    
+	}
+    }
+    
+    private void handleClientRead(SelectionKey key, SocketChannel readChannel, POP3SocketState state) {
+	
+	if (!state.isCurrentLineReady()) {
+	    
+	}
+	
 	switch(state.getPOP3State()) {
 	case AUTHORIZATION:
+	    
 	    
 	    
 	    
@@ -57,7 +73,18 @@ public class POP3SocketHandler implements TCPProtocol {
 	case UPDATE:
 	    break;
 	}
-
+    }
+    
+    private void clientReadLine(SocketChannel clientChannel, POP3SocketState state) throws IOException {
+	
+	StringBuffer currentLine = state.getCurrentLine();
+	ByteBuffer buf = state.readBufferFor(clientChannel);
+	
+	clientChannel.read(buf);
+	buf.flip();
+	
+	
+	
     }
 
     @Override

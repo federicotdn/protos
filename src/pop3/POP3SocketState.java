@@ -24,11 +24,15 @@ public class POP3SocketState {
     private ByteBuffer serverOutBuf;
     private ByteBuffer serverInBuf;
     
+    private StringBuffer currentLine;
+    private boolean currentLineReady;
+    
     POP3SocketState(final SocketChannel clientChannel) {
 	
 	serverConnected = false;
 	pop3State = POP3ProtocolState.AUTHORIZATION;
 	lastCommand = null;
+	currentLine = new StringBuffer();
 	
         if (clientChannel == null) {
             throw new IllegalArgumentException();
@@ -52,6 +56,18 @@ public class POP3SocketState {
 	return lastCommand;
     }
     
+    public boolean isClientSocket(SocketChannel channel) {
+	return channel == clientChannel;
+    }
+    
+    public boolean isCurrentLineReady() {
+	return currentLineReady;
+    }
+    
+    public StringBuffer getCurrentLine() {
+	return currentLine;
+    }
+    
     public ByteBuffer writeBufferFor(SocketChannel channel) {
 
 	if (clientChannel == channel) {
@@ -62,6 +78,17 @@ public class POP3SocketState {
 	    throw new IllegalArgumentException("Buffer: socket desconocido.");
 	}
     }
+    
+    public ByteBuffer readBufferFor(SocketChannel channel) {
+
+	if (clientChannel == channel) {
+	    return clientInBuf;
+	} else if (pop3ServerChannel == channel) {
+	    return serverInBuf;
+	} else {
+	    throw new IllegalArgumentException("Buffer: socket desconocido.");
+	}
+    }    
     
     public void registerClientWrite(Selector selector) throws ClosedChannelException {
 	clientChannel.register(selector, SelectionKey.OP_WRITE, this);
