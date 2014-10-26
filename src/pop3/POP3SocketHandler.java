@@ -52,6 +52,7 @@ public class POP3SocketHandler implements TCPProtocol {
 	POP3SocketState state = (POP3SocketState) key.attachment();
 	
 	POP3Command lastCommand = state.getLastPOP3Command();
+	StringBuffer sb = new StringBuffer();
 	
 	switch(state.getPOP3State()) {
 	case AUTHORIZATION:
@@ -60,11 +61,14 @@ public class POP3SocketHandler implements TCPProtocol {
 	    if (lastCommand == null) {
 		
 		ByteBuffer buf = state.writeBufferFor(writeChannel);
-		buf.put(pop3Parser.getCommandString(POP3Command.OK).getBytes());
-		buf.put("\r\n".getBytes());
+		sb.append(pop3Parser.getCommandString(POP3Command.OK));
+		sb.append(" ").append(serverState.getConfig().getGreeting());
+		
+		writeChannel(writeChannel, buf, sb);
 		buf.flip();
-		writeChannel.write(buf);
 		key.cancel();
+	    } else {
+		
 	    }
 	    
 	    break;
@@ -76,6 +80,13 @@ public class POP3SocketHandler implements TCPProtocol {
 	    break;
 	}
 
+    }
+    
+    private void writeChannel(SocketChannel channel, ByteBuffer buf, StringBuffer sb) throws IOException {
+	sb.append("\r\n");
+	byte[] bytes = sb.toString().getBytes();
+	buf.put(bytes);
+	channel.write(buf);
     }
 
     @Override
