@@ -63,7 +63,11 @@ public class POP3SocketState {
 	}
     }
     
-    public void registerWrite(Selector selector) throws ClosedChannelException {
+    public void registerClientWrite(Selector selector) throws ClosedChannelException {
 	clientChannel.register(selector, SelectionKey.OP_WRITE, this);
+    }
+    
+    public void registerClientRead(Selector selector) throws ClosedChannelException {
+	clientChannel.register(selector, SelectionKey.OP_READ, this);
     }
 }

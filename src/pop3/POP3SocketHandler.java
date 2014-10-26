@@ -31,7 +31,7 @@ public class POP3SocketHandler implements TCPProtocol {
 	clientChannel.configureBlocking(false);
 	
 	POP3SocketState socketState = new POP3SocketState(clientChannel);
-	socketState.registerWrite(key.selector());
+	socketState.registerClientWrite(key.selector());
 	
 	serverState.setSocketHandler(clientChannel, this);
     }
@@ -39,7 +39,24 @@ public class POP3SocketHandler implements TCPProtocol {
     @Override
     public void handleRead(SelectionKey key) throws IOException {
 
+	System.out.println("Handle Read");
+	
 	SocketChannel readChannel = (SocketChannel) key.channel();
+	POP3SocketState state = (POP3SocketState) key.attachment();
+	
+	switch(state.getPOP3State()) {
+	case AUTHORIZATION:
+	    
+	    
+	    
+	    break;
+	    
+	case TRANSACTION:
+	    break;
+	    
+	case UPDATE:
+	    break;
+	}
 
     }
 
@@ -66,7 +83,8 @@ public class POP3SocketHandler implements TCPProtocol {
 		
 		writeChannel(writeChannel, buf, sb);
 		buf.flip();
-		key.cancel();
+		state.registerClientRead(key.selector());
+		
 	    } else {
 		
 	    }
@@ -88,6 +106,7 @@ public class POP3SocketHandler implements TCPProtocol {
 	buf.put(bytes);
 	channel.write(buf);
     }
+    
 
     @Override
     public void handleConnect(SelectionKey key) throws IOException {
