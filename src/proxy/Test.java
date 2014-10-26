@@ -2,17 +2,17 @@ package proxy;
 
 import java.io.IOException;
 
+import javax.xml.bind.JAXBException;
+
 import exceptions.InvalidCommandException;
-import pop3.POP3CommandParser;
 
 public class Test {
 
-    public static void main(String[] args) throws IOException, InvalidCommandException {
+    public static void main(String[] args) throws JAXBException, InvalidCommandException {
 	System.out.println("Hello, World!");
 	ProxyServer server = new ProxyServer();
 	
 	try {
-	    
 	    server.init();
 	    server.begin();
 	    

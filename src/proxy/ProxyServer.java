@@ -9,6 +9,8 @@ import java.nio.channels.SocketChannel;
 import java.util.HashMap;
 import java.util.Iterator;
 
+import javax.xml.bind.JAXBException;
+
 import pop3.POP3SocketHandler;
 import rcp.RCPSocketHandler;
 
@@ -24,7 +26,7 @@ public class ProxyServer {
 	private POP3SocketHandler pop3Handler;
 	private RCPSocketHandler rcpHandler;
 
-	public void init() throws IOException {
+	public void init() throws IOException, JAXBException {
 
 		state = new ServerState();
 		
