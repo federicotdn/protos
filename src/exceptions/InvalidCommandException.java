@@ -2,14 +2,16 @@ package exceptions;
 
 public class InvalidCommandException extends Exception {
     private String command;
+    private String reason;
     
-    public InvalidCommandException(String command) {
+    public InvalidCommandException(String command, String reason) {
 	this.command = command;
+	this.reason = reason;
     }
     
     @Override
     public String getMessage() {
-	return "Invalid POP3 command: " + command;
+	return "Invalid command: " + command + ": " + reason;
     }
     
 }

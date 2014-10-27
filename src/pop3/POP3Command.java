@@ -14,9 +14,19 @@ public enum POP3Command {
     ERROR("error");
     
     private final String key;
+    private String[] params;
     
     POP3Command(String key) {
 	this.key = key;
+	params = null;
+    }
+    
+    public String[] getParams() {
+	return params;
+    }
+    
+    public void setParams(String[] params) {
+	this.params = params;
     }
     
     public String getKey() {

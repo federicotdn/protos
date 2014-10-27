@@ -1,6 +1,5 @@
 package proxy;
 
-import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.Map;
 
@@ -19,9 +18,8 @@ public class ServerConfig {
 	private InetSocketAddress rcpAddress;
 
 	public ServerConfig() throws JAXBException {
-		ConfigLoader configLoader = new ConfigLoader();
-		users = configLoader.loadUserMap("src/resources/users.xml");
-		params = configLoader.loadParams("src/resources/config.xml");
+		users = ConfigLoader.loadUserMap("src/resources/users.xml");
+		params = ConfigLoader.loadParams("src/resources/config.xml");
 		pop3Address = new InetSocketAddress(params.getPop3Host(), params.getPop3Port());
 		rcpAddress = new InetSocketAddress(params.getRcpHost(), params.getRcpPort());
 	}

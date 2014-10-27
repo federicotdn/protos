@@ -26,6 +26,7 @@ public class POP3SocketState {
     
     private StringBuffer currentLine;
     private boolean currentLineReady;
+    private String lastError;
     
     POP3SocketState(final SocketChannel clientChannel) {
 	
@@ -33,6 +34,7 @@ public class POP3SocketState {
 	pop3State = POP3ProtocolState.AUTHORIZATION;
 	lastCommand = null;
 	currentLine = new StringBuffer();
+	lastError = null;
 	
         if (clientChannel == null) {
             throw new IllegalArgumentException();
@@ -62,6 +64,29 @@ public class POP3SocketState {
     
     public boolean isCurrentLineReady() {
 	return currentLineReady;
+    }
+    
+    public void setCurrentLineReady(boolean ready) {
+	currentLineReady = ready;
+    }
+    
+    public String removeLastError() {
+	String error = lastError;
+	lastError = null;
+	return error;
+    }
+    
+    public void setLastError(String error) {
+	lastError = error;
+    }
+    
+    public boolean hasError() {
+	return lastError != null;
+    }
+    
+    public void resetCurentLine() {
+	currentLine = new StringBuffer();
+	setCurrentLineReady(false);
     }
     
     public StringBuffer getCurrentLine() {
