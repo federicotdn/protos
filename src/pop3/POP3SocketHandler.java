@@ -9,6 +9,7 @@ import java.util.Queue;
 
 import javax.xml.bind.JAXBException;
 
+import exceptions.InvalidCommandException;
 import proxy.ServerState;
 import proxy.TCPProtocol;
 
@@ -70,6 +71,17 @@ public class POP3SocketHandler implements TCPProtocol {
 		state.resetCurentLine();
 		System.out.println(line);
 		
+		try {
+		    
+		    POP3Command com = pop3Parser.commandFromString(line);
+		    System.out.println("command: " + com.toString());
+		    
+		} catch (InvalidCommandException e) {
+		    
+		    System.out.println(e.getMessage());
+		    
+		}
+		
 	    } else {
 		
 		if (state.hasError()) {
@@ -92,12 +104,12 @@ public class POP3SocketHandler implements TCPProtocol {
     private void clientReadLine(SocketChannel clientChannel, POP3SocketState state) {
 	
 	ByteBuffer buf = state.readBufferFor(clientChannel);
-	Character lastChar = null;
+	char lastChar = 0;
 	StringBuffer sb = state.getCurrentLine();
 	
-	while (buf.remaining() > 0) {
+	while (buf.hasRemaining()) {
 
-	    Character ch = (char) buf.get();
+	    char ch = (char) buf.get();
 	    
 	    if (isPrintableAscii(ch)) {
 		
@@ -133,10 +145,10 @@ public class POP3SocketHandler implements TCPProtocol {
     }
     
     private void skipBufferLine(ByteBuffer buf) {
-	Character lastChar = null;
+	char lastChar = 0;
 	
 	while (buf.hasRemaining()) {	
-	    Character ch = (char) buf.get();
+	    char ch = (char) buf.get();
 	    if (lastChar == '\r' && ch == '\n') {
 		return;
 	    }

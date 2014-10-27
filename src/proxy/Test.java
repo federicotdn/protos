@@ -9,7 +9,7 @@ import exceptions.InvalidCommandException;
 
 public class Test {
 
-    public static void main(String[] args) throws JAXBException, InvalidCommandException {
+    public static void main(String[] args) throws Exception {
 	System.out.println("Hello, World!");
 
 	ProxyServer server = new ProxyServer();
@@ -18,8 +18,8 @@ public class Test {
 	    server.init();
 	    server.begin();
 	    
-	} catch (IOException e) {
-	    e.printStackTrace();
+	} catch (Exception e) {
+	    throw e;
     	}
 	
 	System.out.println("End.");

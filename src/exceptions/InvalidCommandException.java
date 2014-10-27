@@ -1,17 +1,15 @@
 package exceptions;
 
 public class InvalidCommandException extends Exception {
-    private String command;
-    private String reason;
+    private String msg;
     
-    public InvalidCommandException(String command, String reason) {
-	this.command = command;
-	this.reason = reason;
+    public InvalidCommandException(String msg) {
+	this.msg = msg;
     }
     
     @Override
     public String getMessage() {
-	return "Invalid command: " + command + ": " + reason;
+	return msg;
     }
     
 }
