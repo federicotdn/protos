@@ -5,7 +5,6 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
-import java.util.Queue;
 
 import javax.xml.bind.JAXBException;
 
@@ -17,8 +16,6 @@ public class POP3SocketHandler implements TCPProtocol {
 
     private POP3CommandParser pop3Parser;
     private ServerState serverState;
-
-    private static int MAX_POP3_REQ_LEN = 255;
 
     public POP3SocketHandler(ServerState serverState) throws IOException, JAXBException {
 
@@ -48,61 +45,69 @@ public class POP3SocketHandler implements TCPProtocol {
 	SocketChannel readChannel = (SocketChannel) key.channel();
 	POP3SocketState state = (POP3SocketState) key.attachment();
 
-	if (state.isClientSocket(readChannel)) {
-	    handleClientRead(key, readChannel, state);
+	if (readChannel == state.getClientChannel()) {
+	    handleClientRead(key, state);
 	} else {
 
 	}
     }
 
-    private void handleClientRead(SelectionKey key, SocketChannel clientChannel, POP3SocketState state) throws IOException {
+    private void handleClientRead(SelectionKey key, POP3SocketState state) throws IOException {
 
+	SocketChannel clientChannel = state.getClientChannel();
 	boolean finished = false;
 	
-	clientReadChannel(clientChannel, state);
+	System.out.println("client read");
+	
+	clientReadChannel(state);
 	
 	while (!finished) {
 	    
-	    clientReadLine(clientChannel, state);
+	    clientReadLine(state);
 	    
 	    if (state.isCurrentLineReady()) {
-		
+
 		String line = state.getCurrentLine().toString();
 		state.resetCurentLine();
 		System.out.println(line);
-		
+
 		try {
-		    
+
 		    POP3Command com = pop3Parser.commandFromString(line);
 		    System.out.println("command: " + com.toString());
-		    
+		    handleClientCommand(key, state, com);
+
 		} catch (InvalidCommandException e) {
-		    
+
 		    System.out.println(e.getMessage());
-		    
+
 		}
-		
+
+	    } else if (state.hasError()) {
+
+		String error = state.removeLastError();
+		System.out.println("error: " + error);
+
 	    } else {
-		
-		if (state.hasError()) {
-		    
-		   String error = state.removeLastError();
-		   System.out.println("error: " + error);
-		    
-		} else {
-		    
-		    finished = true;
-		    
-		}
-		
+
+		finished = true;
+
 	    }
+
 	}
 	
 	state.readBufferFor(clientChannel).compact();
     }
-
-    private void clientReadLine(SocketChannel clientChannel, POP3SocketState state) {
+    
+    private void handleClientCommand(SelectionKey key, POP3SocketState state, POP3Command com) {
 	
+	
+	
+    }
+
+    private void clientReadLine(POP3SocketState state) {
+	
+	SocketChannel clientChannel = state.getClientChannel();
 	ByteBuffer buf = state.readBufferFor(clientChannel);
 	char lastChar = 0;
 	StringBuffer sb = state.getCurrentLine();
@@ -113,10 +118,12 @@ public class POP3SocketHandler implements TCPProtocol {
 	    
 	    if (isPrintableAscii(ch)) {
 		
-		if (sb.length() > MAX_POP3_REQ_LEN - 2) {
+		//Restar 2 a getMaxRequestLen para no incluir \r\n
+		if (sb.length() > pop3Parser.getMaxRequestLen() - 2) {
 		    
-		    //Request is too long
+		    //Mensaje demasiado largo
 		    skipBufferLine(buf);
+		    state.resetCurentLine();
 		    state.setLastError("Request was too long.");
 		    break;
 		    
@@ -128,8 +135,9 @@ public class POP3SocketHandler implements TCPProtocol {
 		
 	    } else if (ch != '\r' && ch != '\n') {
 		
-		//Invalid ASCII character
+		//Caracter ASCII invalido
 		skipBufferLine(buf);
+		state.resetCurentLine();
 		state.setLastError("Invalid ASCII character received.");
 		break;
 		
@@ -160,8 +168,9 @@ public class POP3SocketHandler implements TCPProtocol {
 	return ch >= 32 && ch <= 126;
     }
     
-    private void clientReadChannel(SocketChannel clientChannel, POP3SocketState state) throws IOException {
+    private void clientReadChannel(POP3SocketState state) throws IOException {
 
+	SocketChannel clientChannel = state.getClientChannel();
 	ByteBuffer buf = state.readBufferFor(clientChannel);
 
 	clientChannel.read(buf);

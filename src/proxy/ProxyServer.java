@@ -1,12 +1,9 @@
 package proxy;
 
 import java.io.IOException;
-import java.nio.channels.SelectableChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
-import java.nio.channels.SocketChannel;
-import java.util.HashMap;
 import java.util.Iterator;
 
 import javax.xml.bind.JAXBException;

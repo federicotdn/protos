@@ -7,6 +7,9 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+/*
+ * Clase instanciada usando JAXB.
+ */
 @XmlRootElement (name="users")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class UserMap {

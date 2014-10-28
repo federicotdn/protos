@@ -1,11 +1,9 @@
 package pop3;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 
 import javax.xml.bind.JAXBException;
 
@@ -35,6 +33,10 @@ public class POP3CommandParser {
 	    pop3Commands.put(commandName, com);
 	    
 	}
+    }
+    
+    public Integer getMaxRequestLen() {
+	return pop3Vals.getMaxRequestLen();
     }
     
     public POP3Command commandFromString(String com) throws InvalidCommandException {

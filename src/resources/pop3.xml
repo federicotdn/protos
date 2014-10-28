@@ -3,6 +3,7 @@
 	<maxCommandLen>4</maxCommandLen>
 	<minCommandLen>3</minCommandLen>
 	<maxParamLen>40</maxParamLen>
+	<maxRequestLen>255</maxRequestLen> <!-- (Including \r\n) -->
 	<commandMap>
 		<entry>
 			<key>ok</key>

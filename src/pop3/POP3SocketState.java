@@ -1,6 +1,5 @@
 package pop3;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectionKey;
@@ -58,8 +57,12 @@ public class POP3SocketState {
 	return lastCommand;
     }
     
-    public boolean isClientSocket(SocketChannel channel) {
-	return channel == clientChannel;
+    public SocketChannel getClientChannel() {
+	return clientChannel;
+    }
+    
+    public SocketChannel getServerChannel() {
+	return pop3ServerChannel;
     }
     
     public boolean isCurrentLineReady() {

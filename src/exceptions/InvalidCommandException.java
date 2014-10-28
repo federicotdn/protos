@@ -1,5 +1,6 @@
 package exceptions;
 
+@SuppressWarnings("serial")
 public class InvalidCommandException extends Exception {
     private String msg;
     
