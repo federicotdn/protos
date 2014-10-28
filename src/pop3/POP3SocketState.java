@@ -3,12 +3,11 @@ package pop3;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 
 public class POP3SocketState {
     
-    private static int BUF_SIZE = 4 * 1014;
+    private int bufSize;
 
     public final SocketChannel clientChannel;
     public SocketChannel pop3ServerChannel;
@@ -26,14 +25,15 @@ public class POP3SocketState {
     private StringBuffer currentLine;
     private boolean currentLineReady;
     private String lastError;
-    
-    POP3SocketState(final SocketChannel clientChannel) {
+
+    POP3SocketState(final SocketChannel clientChannel, int bufSize) {
 	
 	serverConnected = false;
 	pop3State = POP3ProtocolState.AUTHORIZATION;
 	lastCommand = null;
 	currentLine = new StringBuffer();
 	lastError = null;
+	this.bufSize = bufSize;
 	
         if (clientChannel == null) {
             throw new IllegalArgumentException();
@@ -41,11 +41,13 @@ public class POP3SocketState {
         
         this.clientChannel = clientChannel;
         
-        clientOutBuf = ByteBuffer.allocate(BUF_SIZE);
-        clientInBuf = ByteBuffer.allocate(BUF_SIZE);
+        clientOutBuf = ByteBuffer.allocate(this.bufSize);
+        clientInBuf = ByteBuffer.allocate(this.bufSize);
+        
+        clientOutBuf.limit(0);
     }
     
-    public boolean hasServerConnected() {
+    public boolean isServerConnected() {
 	return serverConnected;
     }
     
@@ -55,6 +57,10 @@ public class POP3SocketState {
     
     public POP3Command getLastPOP3Command() {
 	return lastCommand;
+    }
+    
+    public void setLastPOP3Command(POP3Command com) {
+	lastCommand = com;
     }
     
     public SocketChannel getClientChannel() {
@@ -118,11 +124,14 @@ public class POP3SocketState {
 	}
     }    
     
-    public void registerClientWrite(Selector selector) throws ClosedChannelException {
-	clientChannel.register(selector, SelectionKey.OP_WRITE, this);
-    }
-    
-    public void registerClientRead(Selector selector) throws ClosedChannelException {
-	clientChannel.register(selector, SelectionKey.OP_READ, this);
+    public void updateClientSubscription(SelectionKey key) throws ClosedChannelException {
+	
+	int flags = SelectionKey.OP_READ;
+	
+	if (clientOutBuf.hasRemaining()) {
+	    flags |= SelectionKey.OP_WRITE;
+	}
+	
+	clientChannel.register(key.selector(), flags, this);
     }
 }

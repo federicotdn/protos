@@ -16,6 +16,15 @@ public class ServerConfigParams {
 	private String pop3Host;
 	private String rcpHost;
 	private String defaultPOP3Server;
+	private Integer pop3BufferSize;
+
+	public Integer getPOP3BufferSize() {
+	    return pop3BufferSize;
+	}
+
+	public void setPOP3BufferSize(Integer pop3bufferSize) {
+	    this.pop3BufferSize = pop3bufferSize;
+	}
 
 	public Integer getPop3Port() {
 		return pop3Port;
@@ -68,7 +77,7 @@ public class ServerConfigParams {
 	public void validate() {
 		if (pop3Port == null || rcpPort == null || pop3Host == null
 				|| greeting == null || defaultPOP3Server == null
-				|| rcpHost == null) {
+				|| rcpHost == null || pop3BufferSize == null) {
 			throw new IllegalArgumentException(
 					"Missing or invalid paramter in config.xml");
 		}

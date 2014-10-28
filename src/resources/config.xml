@@ -2,8 +2,9 @@
 <params>
 	<pop3Port>4545</pop3Port>
 	<rcpPort>4546</rcpPort>
-	<greeting>Proxy Server</greeting>
+	<greeting>Proxy Server ready.</greeting>
 	<pop3Host>localhost</pop3Host>
 	<rcpHost>localhost</rcpHost>
 	<defaultPOP3Server>localhost</defaultPOP3Server>
+	<pop3BufferSize>4096</pop3BufferSize>
 </params>

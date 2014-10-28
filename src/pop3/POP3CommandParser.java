@@ -41,6 +41,9 @@ public class POP3CommandParser {
     
     public POP3Command commandFromString(String com) throws InvalidCommandException {
 	
+	//Corregir para matchear mejor contraseñas.  PASS puede tener como argumento una contraseña
+	//que puede llegar a tener dos o mas espacios seguidos.
+	
 	if (com.matches(spaceRegex)) {
 	    throw new InvalidCommandException("All separators must be single space characters.");
 	}

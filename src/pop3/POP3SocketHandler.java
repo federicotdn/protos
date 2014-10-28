@@ -33,8 +33,11 @@ public class POP3SocketHandler implements TCPProtocol {
 	SocketChannel clientChannel = listenChannel.accept();
 	clientChannel.configureBlocking(false);
 
-	POP3SocketState socketState = new POP3SocketState(clientChannel);
-	socketState.registerClientWrite(key.selector());
+	int bufSize = serverState.getConfig().getPOP3BufSize();
+	
+	POP3SocketState socketState = new POP3SocketState(clientChannel, bufSize);
+	sendClientGreeting(socketState);
+	socketState.updateClientSubscription(key);
 
 	serverState.setSocketHandler(clientChannel, this);
     }
@@ -69,8 +72,7 @@ public class POP3SocketHandler implements TCPProtocol {
 
 		String line = state.getCurrentLine().toString();
 		state.resetCurentLine();
-		System.out.println(line);
-
+		
 		try {
 
 		    POP3Command com = pop3Parser.commandFromString(line);
@@ -79,7 +81,7 @@ public class POP3SocketHandler implements TCPProtocol {
 
 		} catch (InvalidCommandException e) {
 
-		    System.out.println(e.getMessage());
+		    e.printStackTrace();
 
 		}
 
@@ -99,10 +101,39 @@ public class POP3SocketHandler implements TCPProtocol {
 	state.readBufferFor(clientChannel).compact();
     }
     
-    private void handleClientCommand(SelectionKey key, POP3SocketState state, POP3Command com) {
+    private void handleClientCommand(SelectionKey key, POP3SocketState state, POP3Command com) throws IOException {
+
+	SocketChannel clientChannel = state.getClientChannel();
+	ByteBuffer buf = state.writeBufferFor(clientChannel);
 	
+	String msg = "recibi: ";
+	msg += com.toString();
+	appendToBuffer(buf, new StringBuffer(msg));
 	
+	switch (com) {
+
+	case CAPA:
+	    break;
+	    
+	case USER:
+	    break;
+	    
+	case PASS:
+	    break;
+	    
+	case QUIT:
+	    
+	    break;
+	    
+	default: //RSET, STAT, LIST, RETR, DELE, NOOP
+	    
+	    
+	    break;
+
+	}
 	
+	state.updateClientSubscription(key);
+
     }
 
     private void clientReadLine(POP3SocketState state) {
@@ -185,43 +216,40 @@ public class POP3SocketHandler implements TCPProtocol {
 	SocketChannel writeChannel = (SocketChannel) key.channel();
 	POP3SocketState state = (POP3SocketState) key.attachment();
 
-	POP3Command lastCommand = state.getLastPOP3Command();
-	StringBuffer sb = new StringBuffer();
-
-	switch (state.getPOP3State()) {
-	case AUTHORIZATION:
-
-	    //Enviar greeting
-	    if (lastCommand == null) {
-
-		ByteBuffer buf = state.writeBufferFor(writeChannel);
-		sb.append(pop3Parser.getCommandString(POP3Command.OK));
-		sb.append(" ").append(serverState.getConfig().getGreeting());
-
-		writeChannel(writeChannel, buf, sb);
-		state.registerClientRead(key.selector());
-
-	    } else {
-
-	    }
-
-	    break;
-
-	case TRANSACTION:
-	    break;
-
-	case UPDATE:
-	    break;
+	if (writeChannel == state.getClientChannel()) {
+	    handleClientWrite(key, state);
+	} else {
+	    
 	}
 
     }
+    
+    private void handleClientWrite(SelectionKey key, POP3SocketState state) throws IOException {
+	
+	SocketChannel clientChannel = state.getClientChannel();
+	ByteBuffer buf = state.writeBufferFor(clientChannel);
+	
+	clientChannel.write(buf);
+	
+	state.updateClientSubscription(key);
+    }
+    
+    private void sendClientGreeting(POP3SocketState state) throws IOException {
+	
+	SocketChannel clientChannel = state.getClientChannel();
+	ByteBuffer buf = state.writeBufferFor(clientChannel);
+	
+	StringBuffer msg = new StringBuffer(pop3Parser.getCommandString(POP3Command.OK));
+	msg.append(" ").append(serverState.getConfig().getGreeting());
+	
+	appendToBuffer(buf, msg);
+    }
 
-    private void writeChannel(SocketChannel channel, ByteBuffer buf, StringBuffer sb) throws IOException {
+    private void appendToBuffer(ByteBuffer buf, StringBuffer sb) throws IOException {
 	sb.append("\r\n");
-	byte[] bytes = sb.toString().getBytes();
-	buf.put(bytes);
+	buf.compact();
+	buf.put(sb.toString().getBytes());
 	buf.flip();
-	channel.write(buf);
     }
 
     @Override

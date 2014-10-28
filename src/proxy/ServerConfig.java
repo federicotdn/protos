@@ -24,6 +24,10 @@ public class ServerConfig {
 		rcpAddress = new InetSocketAddress(params.getRcpHost(), params.getRcpPort());
 	}
 
+	public Integer getPOP3BufSize() {
+	    return params.getPOP3BufferSize();
+	}
+	
 	public String getGreeting() {
 		return params.getGreeting();
 	}
