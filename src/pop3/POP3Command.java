@@ -11,9 +11,13 @@ public enum POP3Command {
     DELE("delete"),
     CAPA("capabilities"),
     OK("ok"),
-    ERROR("error");
+    ERROR("error"),
+    NOOP("no_operation"),
+    RSET("reset");
     
     private final String key;
+    private String originalCommand;
+
     private String[] params;
     
     POP3Command(String key) {
@@ -38,4 +42,11 @@ public enum POP3Command {
 	return key;
     }
     
+    public String getOriginalCommand() {
+        return originalCommand;
+    }
+
+    public void setOriginalCommand(String originalCommand) {
+        this.originalCommand = originalCommand;
+    }
 }

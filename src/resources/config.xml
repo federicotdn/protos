@@ -7,4 +7,5 @@
 	<rcpHost>localhost</rcpHost>
 	<defaultPOP3Server>localhost</defaultPOP3Server>
 	<pop3BufferSize>4096</pop3BufferSize>
+	<capaList>USER</capaList>
 </params>

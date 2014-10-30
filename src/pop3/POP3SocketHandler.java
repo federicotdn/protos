@@ -1,6 +1,8 @@
 package pop3;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.ServerSocket;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.ServerSocketChannel;
@@ -14,6 +16,8 @@ import proxy.TCPProtocol;
 
 public class POP3SocketHandler implements TCPProtocol {
 
+    private static int POP3_PORT = 110;
+    
     private POP3CommandParser pop3Parser;
     private ServerState serverState;
 
@@ -62,6 +66,8 @@ public class POP3SocketHandler implements TCPProtocol {
 	
 	System.out.println("client read");
 	
+	
+	
 	clientReadChannel(state);
 	
 	while (!finished) {
@@ -106,9 +112,9 @@ public class POP3SocketHandler implements TCPProtocol {
 	SocketChannel clientChannel = state.getClientChannel();
 	ByteBuffer buf = state.writeBufferFor(clientChannel);
 	
-	String msg = "recibi: ";
-	msg += com.toString();
+	String msg = "recibi: " + com.toString();
 	appendToBuffer(buf, new StringBuffer(msg));
+	state.updateClientSubscription(key);
 	
 	switch (com) {
 
@@ -116,6 +122,57 @@ public class POP3SocketHandler implements TCPProtocol {
 	    break;
 	    
 	case USER:
+	    
+	    String user = com.getParams()[0];
+	    String server = serverState.getUserPOP3Server(user);
+	    SocketChannel oldServerChannel = state.getServerChannel();
+	    String oldServerHostname = state.getPop3ServerHostname();
+	    
+	    if (state.isServerConnected()) {
+		
+		// Habia una coneccion a otro servidor
+		if (!oldServerHostname.equals(server)) {
+		    
+		    oldServerChannel.keyFor(key.selector()).cancel();
+		    oldServerChannel.close();
+		    state.resetServerSettings();
+		    
+		} else {
+		    
+		    // Habia una conneccion al mismo servidor
+		    // mandar USER al server
+		    
+		    break;
+		}
+		
+	    } else {
+		
+		if (oldServerHostname != null) {
+		    
+		    if (oldServerHostname.equals(server)) {
+			// Habia una coneccion pendiente al mismo servidor
+			state.setLastUSERCommand(com);
+			break;
+			
+		    } else {
+			// Habia una coneccion pendiente a otro servidor
+			oldServerChannel.keyFor(key.selector()).cancel();
+			state.resetServerSettings();	
+		    }
+		    
+		}
+		
+	    }
+	    
+	    SocketChannel pop3ServerChannel = SocketChannel.open();
+	    pop3ServerChannel.configureBlocking(false);
+	    state.setServerChannel(pop3ServerChannel);
+	    state.setPop3ServerHostname(server);
+	    state.setLastUSERCommand(com);
+	    pop3ServerChannel.connect(new InetSocketAddress(server, POP3_PORT));
+	    
+	    pop3ServerChannel.register(key.selector(), SelectionKey.OP_CONNECT, state);
+	    
 	    break;
 	    
 	case PASS:
@@ -203,8 +260,14 @@ public class POP3SocketHandler implements TCPProtocol {
 
 	SocketChannel clientChannel = state.getClientChannel();
 	ByteBuffer buf = state.readBufferFor(clientChannel);
+	
+	buf.compact();
+	
+	if (!buf.hasRemaining()) {
+	    buf.clear();
+	}
 
-	clientChannel.read(buf);
+	System.out.println(clientChannel.read(buf));
 	buf.flip();
     }
 
@@ -248,13 +311,33 @@ public class POP3SocketHandler implements TCPProtocol {
     private void appendToBuffer(ByteBuffer buf, StringBuffer sb) throws IOException {
 	sb.append("\r\n");
 	buf.compact();
+	
+	if (!buf.hasRemaining()) {
+	    buf.clear();
+	}
+	
 	buf.put(sb.toString().getBytes());
 	buf.flip();
     }
 
     @Override
     public void handleConnect(SelectionKey key) throws IOException {
-
+		
+	System.out.println("Handle Connect");
+	
+	SocketChannel pop3ServerChannel = (SocketChannel) key.channel();
+	POP3SocketState state = (POP3SocketState) key.attachment();
+	
+	boolean connected = pop3ServerChannel.finishConnect();
+	if (connected) {
+	    
+	    state.setServerConnected(true);
+	    state.initServerBuffers();
+	    
+	    
+	} else {
+	    //mandarle -ERR al usuario
+	}
     }
 
 }

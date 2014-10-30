@@ -55,6 +55,10 @@ public class ServerConfig {
 	public int getRCPPort() {
 		return rcpAddress.getPort();
 	}
+	
+	public String getDefaultPOP3Server() {
+	    return params.getDefaultPOP3Server();
+	}
 
 	public Map<String, String> getUsers() {
 		return users;

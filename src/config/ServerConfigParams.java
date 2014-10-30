@@ -1,7 +1,11 @@
 package config;
 
+import java.util.List;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlList;
 import javax.xml.bind.annotation.XmlRootElement;
 
 /*
@@ -17,6 +21,18 @@ public class ServerConfigParams {
 	private String rcpHost;
 	private String defaultPOP3Server;
 	private Integer pop3BufferSize;
+	
+	@XmlElement
+	@XmlList
+	private List<String> capaList;
+
+	public List<String> getCapaList() {
+	    return capaList;
+	}
+
+	public void setCapaList(List<String> capaList) {
+	    this.capaList = capaList;
+	}
 
 	public Integer getPOP3BufferSize() {
 	    return pop3BufferSize;
@@ -77,7 +93,8 @@ public class ServerConfigParams {
 	public void validate() {
 		if (pop3Port == null || rcpPort == null || pop3Host == null
 				|| greeting == null || defaultPOP3Server == null
-				|| rcpHost == null || pop3BufferSize == null) {
+				|| rcpHost == null || pop3BufferSize == null
+				|| capaList == null) {
 			throw new IllegalArgumentException(
 					"Missing or invalid paramter in config.xml");
 		}
