@@ -1,28 +1,19 @@
 package pop3;
 
-public enum POP3Command {
+public class POP3Command {
     
-    QUIT("quit"),
-    USER("user"),
-    PASS("password"),
-    STAT("stats"),
-    LIST("list"),
-    RETR("retrieve"),
-    DELE("delete"),
-    CAPA("capabilities"),
-    OK("ok"),
-    ERROR("error"),
-    NOOP("no_operation"),
-    RSET("reset");
+    private CommandEnum command;
     
-    private final String key;
     private String originalCommand;
 
     private String[] params;
     
-    POP3Command(String key) {
-	this.key = key;
-	params = null;
+    public POP3Command(CommandEnum command) {
+	this.command = command;
+    }
+    
+    public CommandEnum getCommand() {
+	return command;
     }
     
     public String[] getParams() {
@@ -31,15 +22,6 @@ public enum POP3Command {
     
     public void setParams(String[] params) {
 	this.params = params;
-    }
-    
-    public String getKey() {
-	return key;
-    }
-    
-    @Override
-    public String toString() {
-	return key;
     }
     
     public String getOriginalCommand() {

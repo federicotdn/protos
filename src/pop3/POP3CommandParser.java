@@ -17,17 +17,17 @@ public class POP3CommandParser {
     private static String separateRegex = "\\s{1}";
     private static String limitsRegex = ".*\\s$|^\\s.*";
     
-    private Map<String, POP3Command> pop3Commands;
+    private Map<String, CommandEnum> pop3Commands;
     private POP3Values pop3Vals;
     
     public POP3CommandParser(String protocolFile) throws IOException, JAXBException {
 	
 	pop3Vals = ConfigLoader.loadPOP3Values(protocolFile);
-	pop3Commands = new HashMap<String, POP3Command>();
+	pop3Commands = new HashMap<String, CommandEnum>();
 	
 	Map<String, String> pop3CommandDefs = pop3Vals.getCommandMap();
 	
-	for (POP3Command com : POP3Command.values()) {
+	for (CommandEnum com : CommandEnum.values()) {
 	    
 	    String commandName = pop3CommandDefs.get(com.getKey());
 	    pop3Commands.put(commandName, com);
@@ -69,21 +69,23 @@ public class POP3CommandParser {
 	}
 	
 	String comUpper = firstCommand.toUpperCase();
-	POP3Command pop3Command = pop3Commands.get(comUpper);
+	CommandEnum command = pop3Commands.get(comUpper);
 	
-	if (pop3Command == null) {
+	if (command == null) {
 	    throw new InvalidCommandException("Command does not exist.");
 	}
 	
+	POP3Command userCommand = new POP3Command(command);
+	
 	if (comParts.length > 1) {
-	    pop3Command.setParams(Arrays.copyOfRange(comParts, 1, comParts.length));
+	    userCommand.setParams(Arrays.copyOfRange(comParts, 1, comParts.length));
 	}
 	
-	pop3Command.setOriginalCommand(com);
-	return pop3Command;
+	userCommand.setOriginalCommand(com);
+	return userCommand;
     }
     
-    public String getCommandString(POP3Command com) {
+    public String getCommandString(CommandEnum com) {
 	return pop3Vals.getCommandMap().get(com.getKey());
     }
     

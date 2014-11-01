@@ -12,11 +12,13 @@ public class ServerState {
 
     private HashMap<SocketChannel, TCPProtocol> socketHandlers;
     private ServerConfig config;
+    private ServerStatistics stats;
 
     public ServerState() throws JAXBException {
 
 	socketHandlers = new HashMap<SocketChannel, TCPProtocol>();
 	config = new ServerConfig();
+	stats = new ServerStatistics();
     }
 
     public TCPProtocol getSocketHandler(SelectionKey key) throws Exception {
