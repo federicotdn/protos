@@ -48,6 +48,9 @@ public class POP3SocketState {
         clientOutBuf = ByteBuffer.allocate(this.bufSize);
         clientInBuf = ByteBuffer.allocate(this.bufSize);
         
+        clientOutBuf.flip();
+        clientInBuf.flip();
+        
         serverOutBuf = null;
         serverInBuf = null;
     }
@@ -143,6 +146,9 @@ public class POP3SocketState {
 	} else {
 	    serverOutBuf = ByteBuffer.allocate(bufSize);
 	}
+	
+	serverInBuf.flip();
+	serverOutBuf.flip();
     }
     
     public ByteBuffer writeBufferFor(SocketChannel channel) {
@@ -166,6 +172,17 @@ public class POP3SocketState {
 	    throw new IllegalArgumentException("Buffer: socket desconocido.");
 	}
     }    
+    
+    public void updateServerSubscription(SelectionKey key) throws ClosedChannelException {
+	
+	int flags = SelectionKey.OP_READ;
+	
+	if (serverOutBuf.hasRemaining()) {
+	    flags |= SelectionKey.OP_WRITE;
+	}
+	
+	pop3ServerChannel.register(key.selector(), flags, this);
+    }
     
     public void updateClientSubscription(SelectionKey key) throws ClosedChannelException {
 	

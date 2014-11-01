@@ -35,6 +35,10 @@ public class ServerState {
     public void setSocketHandler(SocketChannel channel, TCPProtocol handler) {
 	socketHandlers.put(channel, handler);
     }
+    
+    public void removeSocketHandler(SocketChannel channel) {
+	socketHandlers.remove(channel);
+    }
 
     public String getUserPOP3Server(String user) {
 	Map<String, String> userMap = config.getUsers();
