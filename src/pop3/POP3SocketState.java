@@ -15,7 +15,6 @@ public class POP3SocketState {
     private boolean serverConnected;
     private String pop3ServerHostname;
 
-    private POP3ProtocolState pop3State;
     private POP3Command lastUSERCommand;
     
     private ByteBuffer clientOutBuf;
@@ -32,7 +31,6 @@ public class POP3SocketState {
 	
 	serverConnected = false;
 	pop3ServerHostname = null;
-	pop3State = POP3ProtocolState.AUTHORIZATION;
 	lastUSERCommand = null;
 	currentLine = new StringBuffer();
 	lastError = null;
@@ -69,10 +67,6 @@ public class POP3SocketState {
     
     public void setServerConnected(boolean connected) {
 	serverConnected = connected;
-    }
-    
-    public POP3ProtocolState getPOP3State() {
-	return pop3State;
     }
     
     public POP3Command getLastUSERCommand() {
