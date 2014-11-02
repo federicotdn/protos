@@ -18,12 +18,26 @@ public class POP3SocketHandler implements TCPProtocol {
 
     private static int POP3_PORT = 110;
     
+    private static final String POP3_QUIT = "QUIT";
+    private static final String POP3_USER = "USER";
+    private static final String POP3_PASS = "PASS";
+    private static final String POP3_STAT = "STAT";
+    private static final String POP3_LIST = "LIST";
+    private static final String POP3_RETR = "RETR";
+    private static final String POP3_DELE = "DELE";
+    private static final String POP3_CAPA = "CAPA";
+    private static final String POP3_NOOP = "NOOP";
+    private static final String POP3_RSET = "RSET";
+    
+    private static final String POP3_OK = "+OK";
+    private static final String POP3_ERR = "-ERR";
+    
     private POP3CommandParser pop3Parser;
     private ServerState serverState;
 
     public POP3SocketHandler(ServerState serverState) throws IOException, JAXBException {
 
-	pop3Parser = new POP3CommandParser("src/resources/pop3.xml");
+	pop3Parser = new POP3CommandParser();
 	this.serverState = serverState;
     }
 
@@ -31,8 +45,6 @@ public class POP3SocketHandler implements TCPProtocol {
     public void handleAccept(SelectionKey key) throws IOException {
 
 	ServerSocketChannel listenChannel = (ServerSocketChannel) key.channel();
-
-	System.out.println("Handle Accept");
 
 	SocketChannel clientChannel = listenChannel.accept();
 	clientChannel.configureBlocking(false);
@@ -79,7 +91,6 @@ public class POP3SocketHandler implements TCPProtocol {
 	ByteBuffer clientBuf = state.writeBufferFor(state.getClientChannel());
 	ByteBuffer serverBuf = state.readBufferFor(state.getServerChannel());
 	
-	
 	//TODO: mejorar logica de lectura y escritura a los buffers
 	clientBuf.compact();
 	
@@ -95,10 +106,7 @@ public class POP3SocketHandler implements TCPProtocol {
 
     private void handleClientRead(SelectionKey key, POP3SocketState state) throws IOException {
 
-	SocketChannel clientChannel = state.getClientChannel();
 	boolean finished = false;
-	
-	System.out.println("client read");
 	
 	clientReadChannel(state);
 	
@@ -113,20 +121,20 @@ public class POP3SocketHandler implements TCPProtocol {
 		
 		try {
 
-		    POP3Command com = pop3Parser.commandFromString(line);
-		    System.out.println("command: " + com.toString());
+		    POP3Line com = pop3Parser.commandFromString(line);
+		    
 		    handleClientCommand(key, state, com);
 
 		} catch (InvalidCommandException e) {
 
-		    e.printStackTrace();
+		    sendClientError(state, e.getMessage());
 
 		}
 
 	    } else if (state.hasError()) {
 
 		String error = state.removeLastError();
-		System.out.println("error: " + error);
+		sendClientError(state, error);
 
 	    } else {
 
@@ -136,14 +144,14 @@ public class POP3SocketHandler implements TCPProtocol {
 
 	}
 	
-	state.readBufferFor(clientChannel).compact();
+	state.updateClientSubscription(key);
     }
     
-    private void handleClientCommand(SelectionKey key, POP3SocketState state, POP3Command com) throws IOException {
+    private void handleClientCommand(SelectionKey key, POP3SocketState state, POP3Line com) throws IOException {
 
 	switch (com.getCommand()) {
 
-	case CAPA:
+	case POP3_CAPA:
 	    
 	    List<String> capaList = serverState.getConfig().getCapaList();
 	    
@@ -156,10 +164,10 @@ public class POP3SocketHandler implements TCPProtocol {
 	    }
 	    
 	    appendToClient(state, ".");
-	    
+
 	    break;
 	    
-	case USER:
+	case POP3_USER:
 	    
 	    String user = com.getParams()[0];
 	    String server = serverState.getUserPOP3Server(user);
@@ -179,7 +187,7 @@ public class POP3SocketHandler implements TCPProtocol {
 		} else {
 		    
 		    // Habia una coneccion al mismo servidor
-		    appendToServer(state, com.getOriginalCommand());
+		    appendToServer(state, com.getCommandString());
 		    state.updateServerSubscription(key);
 		    
 		    break;
@@ -217,41 +225,46 @@ public class POP3SocketHandler implements TCPProtocol {
 	    
 	    break;
 	    
-	case PASS:
+	case POP3_PASS:
 	    
 	    if (state.isServerConnected()) {
 		
-		appendToServer(state, com.getOriginalCommand());
+		appendToServer(state, com.getCommandString());
 		state.updateServerSubscription(key);
 		
 	    } else {
 		
-		sendClientError(state, "Proxy: handle PASS locally.");
+		sendClientError(state, "No username given, or connection to server failed.");
 		
 	    }
 	    
 	    break;
 	    
-	case QUIT:
+	case POP3_QUIT:
 	    
 	    if (state.isServerConnected()) {
 		
-		appendToServer(state, com.getOriginalCommand());
+		appendToServer(state, com.getCommandString());
 		state.updateServerSubscription(key);
 		
 	    } else {
 		
 		sendClientOK(state);
-		
+		state.setClosing(true);
 	    }   
 	    
 	    break;
 	    
-	default: //RSET, STAT, LIST, RETR, DELE, NOOP
+	case POP3_RSET:
+	case POP3_STAT:
+	case POP3_LIST:
+	case POP3_RETR:
+	case POP3_DELE:
+	case POP3_NOOP:
 
 	    if (state.isServerConnected()) {
 		
-		appendToServer(state, com.getOriginalCommand());
+		appendToServer(state, com.getCommandString());
 		state.updateServerSubscription(key);
 		
 	    } else {
@@ -262,6 +275,12 @@ public class POP3SocketHandler implements TCPProtocol {
 
 	    break;
 
+	default: //RSET, STAT, LIST, RETR, DELE, NOOP
+	    
+	    sendClientError(state, "Invalid command: " + com.getCommandString());
+	    
+	    break;
+	    
 	}
 	
 	state.updateClientSubscription(key);
@@ -342,14 +361,13 @@ public class POP3SocketHandler implements TCPProtocol {
 	    buf.clear();
 	}
 
-	System.out.println(clientChannel.read(buf));
+	clientChannel.read(buf);
+	
 	buf.flip();
     }
 
     @Override
     public void handleWrite(SelectionKey key) throws IOException {
-
-	System.out.println("Handle write");
 
 	SocketChannel writeChannel = (SocketChannel) key.channel();
 	POP3SocketState state = (POP3SocketState) key.attachment();
@@ -369,6 +387,10 @@ public class POP3SocketHandler implements TCPProtocol {
 	
 	clientChannel.write(buf);
 	
+	if (state.isClosing() && !buf.hasRemaining()) {
+	    
+	}
+	
 	state.updateClientSubscription(key);
     }
     
@@ -383,7 +405,7 @@ public class POP3SocketHandler implements TCPProtocol {
     
     private void sendClientGreeting(POP3SocketState state) throws IOException {
 	
-	StringBuffer msg = new StringBuffer(pop3Parser.getCommandString(CommandEnum.OK));
+	StringBuffer msg = new StringBuffer(POP3_OK);
 	msg.append(" ").append(serverState.getConfig().getGreeting());
 	
 	appendToClient(state, msg.toString());
@@ -391,7 +413,7 @@ public class POP3SocketHandler implements TCPProtocol {
 
     private void sendClientError(POP3SocketState state, String error) throws IOException {
 	
-	StringBuffer msg = new StringBuffer(pop3Parser.getCommandString(CommandEnum.ERROR));
+	StringBuffer msg = new StringBuffer(POP3_ERR);
 	msg.append(" ").append(error);
 	
 	appendToClient(state, msg.toString());
@@ -400,7 +422,7 @@ public class POP3SocketHandler implements TCPProtocol {
     
     private void sendClientOK(POP3SocketState state) throws IOException {
 	
-	String msg = pop3Parser.getCommandString(CommandEnum.OK);
+	String msg = POP3_OK;
 	appendToClient(state, msg);
 	
     }
@@ -429,8 +451,6 @@ public class POP3SocketHandler implements TCPProtocol {
 
     @Override
     public void handleConnect(SelectionKey key) throws IOException {
-		
-	System.out.println("Handle Connect");
 	
 	SocketChannel pop3ServerChannel = (SocketChannel) key.channel();
 	POP3SocketState state = (POP3SocketState) key.attachment();
@@ -441,7 +461,7 @@ public class POP3SocketHandler implements TCPProtocol {
 	    state.setServerConnected(true);
 	    state.initServerBuffers();
 	    
-	    String lastCommand = state.getLastUSERCommand().getOriginalCommand();
+	    String lastCommand = state.getLastUSERCommand().getCommandString();
 	    appendToServer(state, lastCommand);
 	    
 	    pop3ServerChannel.register(key.selector(), SelectionKey.OP_READ, state);

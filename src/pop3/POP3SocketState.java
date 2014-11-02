@@ -15,8 +15,10 @@ public class POP3SocketState {
     private boolean serverConnected;
     private String pop3ServerHostname;
 
-    private POP3Command lastUSERCommand;
+    private POP3Line lastUSERCommand;
     
+    private boolean closing;
+
     private ByteBuffer clientOutBuf;
     private ByteBuffer clientInBuf;
     
@@ -27,9 +29,10 @@ public class POP3SocketState {
     private boolean currentLineReady;
     private String lastError;
 
-    POP3SocketState(final SocketChannel clientChannel, int bufSize) {
+    public POP3SocketState(final SocketChannel clientChannel, int bufSize) {
 	
 	serverConnected = false;
+	closing = false;
 	pop3ServerHostname = null;
 	lastUSERCommand = null;
 	currentLine = new StringBuffer();
@@ -53,6 +56,14 @@ public class POP3SocketState {
         serverInBuf = null;
     }
     
+    public boolean isClosing() {
+        return closing;
+    }
+
+    public void setClosing(boolean closing) {
+        this.closing = closing;
+    }
+    
     public String getPop3ServerHostname() {
         return pop3ServerHostname;
     }
@@ -69,11 +80,11 @@ public class POP3SocketState {
 	serverConnected = connected;
     }
     
-    public POP3Command getLastUSERCommand() {
+    public POP3Line getLastUSERCommand() {
 	return lastUSERCommand;
     }
     
-    public void setLastUSERCommand(POP3Command com) {
+    public void setLastUSERCommand(POP3Line com) {
 	lastUSERCommand = com;
     }
     
@@ -169,7 +180,11 @@ public class POP3SocketState {
     
     public void updateServerSubscription(SelectionKey key) throws ClosedChannelException {
 	
-	int flags = SelectionKey.OP_READ;
+	int flags = 0;
+	
+	if (serverInBuf.limit() - serverInBuf.position() < serverInBuf.capacity()) {
+	    flags |= SelectionKey.OP_READ;
+	}
 	
 	if (serverOutBuf.hasRemaining()) {
 	    flags |= SelectionKey.OP_WRITE;
@@ -181,7 +196,11 @@ public class POP3SocketState {
     public void updateClientSubscription(SelectionKey key) throws ClosedChannelException {
 	
 	//TODO: fijarse mejor cuando subscribirse a READ
-	int flags = SelectionKey.OP_READ;
+	int flags = 0;
+	
+	if (clientInBuf.limit() - clientInBuf.position() < clientInBuf.capacity()) {
+	    flags |= SelectionKey.OP_READ;
+	}
 	
 	if (clientOutBuf.hasRemaining()) {
 	    flags |= SelectionKey.OP_WRITE;

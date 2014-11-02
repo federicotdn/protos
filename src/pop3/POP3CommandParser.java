@@ -13,33 +13,20 @@ import exceptions.InvalidCommandException;
 
 public class POP3CommandParser {
     
-    private static String spaceRegex = ".*\\s{2,}.*";
-    private static String separateRegex = "\\s{1}";
-    private static String limitsRegex = ".*\\s$|^\\s.*";
+    private static final String spaceRegex = ".*\\s{2,}.*";
+    private static final String separateRegex = "\\s{1}";
+    private static final String limitsRegex = ".*\\s$|^\\s.*";
     
-    private Map<String, CommandEnum> pop3Commands;
-    private POP3Values pop3Vals;
-    
-    public POP3CommandParser(String protocolFile) throws IOException, JAXBException {
-	
-	pop3Vals = ConfigLoader.loadPOP3Values(protocolFile);
-	pop3Commands = new HashMap<String, CommandEnum>();
-	
-	Map<String, String> pop3CommandDefs = pop3Vals.getCommandMap();
-	
-	for (CommandEnum com : CommandEnum.values()) {
-	    
-	    String commandName = pop3CommandDefs.get(com.getKey());
-	    pop3Commands.put(commandName, com);
-	    
-	}
-    }
+    private static final int MAX_CMD_LEN = 4;
+    private static final int MIN_CMD_LEN = 3;
+    private static final int MAX_PARAM_LEN = 40;
+    private static final int MAX_REQ_LEN = 255;
     
     public Integer getMaxRequestLen() {
-	return pop3Vals.getMaxRequestLen();
+	return MAX_REQ_LEN;
     }
     
-    public POP3Command commandFromString(String com) throws InvalidCommandException {
+    public POP3Line commandFromString(String com) throws InvalidCommandException {
 	
 	//TODO:
 	//Corregir para matchear mejor contraseñas.  PASS puede tener como argumento una contraseña
@@ -56,7 +43,7 @@ public class POP3CommandParser {
 	String[] comParts = com.split(separateRegex);
 	
 	for (String part : comParts) {
-	    if (part.length() > pop3Vals.getMaxParamLen()) {
+	    if (part.length() > MAX_PARAM_LEN) {
 		throw new InvalidCommandException("Invalid parameter length.");
 	    }
 	}
@@ -64,29 +51,19 @@ public class POP3CommandParser {
 	String firstCommand = comParts[0];
 	int len = firstCommand.length();
 	
-	if (len < pop3Vals.getMinCommandLen() || len > pop3Vals.getMaxCommandLen()) {
+	if (len < MIN_CMD_LEN || len > MAX_CMD_LEN) {
 	    throw new InvalidCommandException("Invalid command length.");
 	}
 	
 	String comUpper = firstCommand.toUpperCase();
-	CommandEnum command = pop3Commands.get(comUpper);
 	
-	if (command == null) {
-	    throw new InvalidCommandException("Command does not exist.");
-	}
-	
-	POP3Command userCommand = new POP3Command(command);
+	POP3Line userCommand = new POP3Line(comUpper);
 	
 	if (comParts.length > 1) {
 	    userCommand.setParams(Arrays.copyOfRange(comParts, 1, comParts.length));
 	}
 	
-	userCommand.setOriginalCommand(com);
+	userCommand.setCommandString(com);
 	return userCommand;
     }
-    
-    public String getCommandString(CommandEnum com) {
-	return pop3Vals.getCommandMap().get(com.getKey());
-    }
-    
 }
