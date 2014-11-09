@@ -8,7 +8,6 @@ import java.util.Map;
 
 import javax.xml.bind.JAXBException;
 
-import config.ConfigLoader;
 import config.XMLManager;
 
 public class ServerState {

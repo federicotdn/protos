@@ -27,4 +27,8 @@ public class UserMap {
     public UserMap(Map<String, String> userMap) {
     	this.userMap = userMap;
     }
+    
+    public UserMap() {
+    	
+    }
 }

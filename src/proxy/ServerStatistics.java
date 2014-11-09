@@ -1,8 +1,11 @@
 package proxy;
 
+import javax.xml.bind.JAXBException;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
+
+import config.XMLManager;
 
 @XmlRootElement(name = "stats")
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -23,5 +26,8 @@ public class ServerStatistics {
 		this.accessCount = accessCount;
 	}
 	
+	public void save() throws JAXBException {
+		XMLManager.saveStats(this);
+	}
 	
 }

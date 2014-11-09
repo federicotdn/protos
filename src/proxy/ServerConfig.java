@@ -48,7 +48,7 @@ public class ServerConfig {
 		params.setPassword(password);
 	}
 	
-	public boolean isMultiplexingState(){
+	public boolean isMultiplexingEnabled(){
 		return params.isMultiplexingEnabled();
 	}
 	
@@ -115,4 +115,21 @@ public class ServerConfig {
 	public void saveUsers() throws JAXBException{
 		XMLManager.saveUsers(users);
 	}
+	
+	public void setL33tEnabled(boolean enabled) {
+		params.setL33tEnabled(enabled);
+	}
+	
+	public void setMultiplexingEnabled(boolean enabled) {
+		params.setMultiplexingEnabled(enabled);
+	}
+	
+	public void setUsers(Map<String, String> users) {
+		this.users = users;
+	}
+
+	public void setL33tTransformations(Map<String, String> l33tTransformations) {
+		this.l33tTransformations = l33tTransformations;
+	}
+	
 }

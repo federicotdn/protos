@@ -38,7 +38,7 @@ public class XMLManager {
 	public static ServerStatistics loadServerStatistics() throws JAXBException{
 		JAXBContext jaxbContext = JAXBContext.newInstance(ServerStatistics.class);
 	    Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
-	    return (ServerStatistics) jaxbUnmarshaller.unmarshal( new File("src/resources/config.xml") );
+	    return (ServerStatistics) jaxbUnmarshaller.unmarshal( new File("src/resources/stats.xml") );
 	}
 	
 	public static void saveParams(ServerConfigParams params) throws JAXBException {
@@ -67,6 +67,13 @@ public class XMLManager {
 	    jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
 	    L33tTransformationsMap transfMap = new L33tTransformationsMap(transfomrations);
 	    jaxbMarshaller.marshal(transfMap, new File("src/resources/l33tTransformations.xml"));
+	}
+	
+	public static void saveStats(ServerStatistics stats) throws JAXBException {
+		JAXBContext jaxbContext = JAXBContext.newInstance(ServerStatistics.class);
+	    Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
+	    jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+	    jaxbMarshaller.marshal(stats, new File("src/resources/stats.xml"));
 	}
 	
 }
