@@ -74,11 +74,7 @@ public class POP3SocketHandler implements TCPProtocol {
 	SocketChannel serverChannel = state.getServerChannel();
 	ByteBuffer serverInBuf = state.readBufferFor(serverChannel);
 
-	if (!serverInBuf.hasRemaining()) {
-	    serverInBuf.clear();
-	} else {
-	    serverInBuf.compact();
-	}
+	prepareBuffer(serverInBuf);
 	
 	serverChannel.read(serverInBuf);
 	serverInBuf.flip();
@@ -101,11 +97,7 @@ public class POP3SocketHandler implements TCPProtocol {
 	ByteBuffer clientWriteBuf = state.writeBufferFor(state.getClientChannel());
 	ByteBuffer serverBuf = state.readBufferFor(state.getServerChannel());
 	
-	if (!clientAuxBuf.hasRemaining()) {
-	    clientAuxBuf.clear();
-	} else {
-	    clientAuxBuf.compact();    
-	}
+	prepareBuffer(clientAuxBuf);
 	
 	while (serverBuf.hasRemaining() && clientAuxBuf.hasRemaining()) {
 	    
@@ -327,13 +319,7 @@ public class POP3SocketHandler implements TCPProtocol {
 
 	    break;
 
-	case RSET:
-	case STAT:
-	case LIST:
-	case RETR:
-	case DELE:
-	case NOOP:
-	case PASS:
+	default: //RSET, STAT, LIST, RETR, DELE, NOOP, PASS
 	    
 	    System.out.println("case: pass");
 
@@ -454,11 +440,7 @@ public class POP3SocketHandler implements TCPProtocol {
 	SocketChannel clientChannel = state.getClientChannel();
 	ByteBuffer buf = state.readBufferFor(clientChannel);
 
-	buf.compact();
-
-	if (!buf.hasRemaining()) {
-	    buf.clear();
-	}
+	prepareBuffer(buf);
 
 	clientChannel.read(buf);
 
@@ -490,11 +472,7 @@ public class POP3SocketHandler implements TCPProtocol {
 	
 	if (auxBuf.hasRemaining()) {
 	    
-	    if (!writeBuf.hasRemaining()) {
-		writeBuf.clear();
-	    } else {
-		writeBuf.compact();
-	    }
+	    prepareBuffer(writeBuf);
 
 	    while (writeBuf.hasRemaining() && auxBuf.hasRemaining()) {
 		writeBuf.put(auxBuf.get());
@@ -539,12 +517,8 @@ public class POP3SocketHandler implements TCPProtocol {
 
 	if (auxBuf.hasRemaining()) {
 	    
-	    if (!writeBuf.hasRemaining()) {
-		writeBuf.clear();
-	    } else {
-		writeBuf.compact();
-	    }
-
+	    prepareBuffer(writeBuf);
+	    
 	    while (writeBuf.hasRemaining() && auxBuf.hasRemaining()) {
 		writeBuf.put(auxBuf.get());
 	    }
@@ -581,13 +555,6 @@ public class POP3SocketHandler implements TCPProtocol {
 
     }
 
-    private void sendClientOK(POP3SocketState state) throws IOException {
-
-	String msg = CommandEnum.OK.toString();
-	appendToClient(state, msg);
-
-    }
-
     private void sendClientOK(POP3SocketState state, String additional)
 	    throws IOException {
 
@@ -617,11 +584,7 @@ public class POP3SocketHandler implements TCPProtocol {
     private void appendToBuffer(ByteBuffer buf, String msg, String ending)
 	    throws IOException {
 
-	if (!buf.hasRemaining()) {
-	    buf.clear();
-	} else {
-	    buf.compact();
-	}
+	prepareBuffer(buf);
 
 	buf.put(msg.getBytes());
 	
@@ -668,6 +631,16 @@ public class POP3SocketHandler implements TCPProtocol {
 	}
     }
 
+    private void prepareBuffer(ByteBuffer buf) {
+	
+	if (!buf.hasRemaining()) {
+	    buf.clear();
+	} else {
+	    buf.compact();
+	}
+	
+    }
+    
     private void abortServerConnection(SelectionKey key, POP3SocketState state)
 	    throws IOException {
 
