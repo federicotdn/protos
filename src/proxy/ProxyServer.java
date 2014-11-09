@@ -9,6 +9,7 @@ import java.util.Iterator;
 import javax.xml.bind.JAXBException;
 
 import pop3.POP3SocketHandler;
+import pop3.POP3SocketState;
 import rcp.RCPSocketHandler;
 
 public class ProxyServer {

@@ -1,9 +1,15 @@
 package pop3;
 
 public enum StatusEnum {
-    READ_CLIENT,
-    WRITE_CLIENT,
-    READ_SERVER_WRITE_CLIENT,
-    WRITE_SERVER,
-    READ_SERVER;
+    READ(1), WRITE(2), CLOSING(3), GREETING(4);
+    
+    int val;
+    
+    StatusEnum(int position) {
+	this.val = (1 << position);
+    }
+    
+    public int getVal() {
+	return val;
+    }
 }
