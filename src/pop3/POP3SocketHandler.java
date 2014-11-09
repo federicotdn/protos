@@ -74,24 +74,52 @@ public class POP3SocketHandler implements TCPProtocol {
 	SocketChannel serverChannel = state.getServerChannel();
 	ByteBuffer serverInBuf = state.readBufferFor(serverChannel);
 
-	serverInBuf.compact();
+	if (!serverInBuf.hasRemaining()) {
+	    serverInBuf.clear();
+	} else {
+	    serverInBuf.compact();
+	}
+	
 	serverChannel.read(serverInBuf);
 	serverInBuf.flip();
 
 	if (state.hasServerFlag(StatusEnum.GREETING)) {
+	    
 	    readServerGreeting(key, state);
 
 	} else {
-
 	    copyServerToClient(state);
-	    state.enableClientFlag(StatusEnum.WRITE);
-
 	}
 
 	state.updateClientSubscription(key);
 	state.updateServerSubscription(key);
     }
 
+    private void copyServerToClient(POP3SocketState state) {
+	
+	ByteBuffer clientAuxBuf = state.auxBufferFor(state.getClientChannel());
+	ByteBuffer clientWriteBuf = state.writeBufferFor(state.getClientChannel());
+	ByteBuffer serverBuf = state.readBufferFor(state.getServerChannel());
+	
+	if (!clientAuxBuf.hasRemaining()) {
+	    clientAuxBuf.clear();
+	} else {
+	    clientAuxBuf.compact();    
+	}
+	
+	while (serverBuf.hasRemaining() && clientAuxBuf.hasRemaining()) {
+	    
+	    clientAuxBuf.put(serverBuf.get());
+	    
+	}
+	
+	clientAuxBuf.flip();
+	
+	if (clientAuxBuf.hasRemaining() || clientWriteBuf.hasRemaining()) {
+	    state.enableClientFlag(StatusEnum.WRITE);
+	}
+    }
+    
     private void readServerGreeting(SelectionKey key, POP3SocketState state)
 	    throws IOException {
 
@@ -143,23 +171,6 @@ public class POP3SocketHandler implements TCPProtocol {
 	serverChannel.close();
     }
 
-    private void copyServerToClient(POP3SocketState state) {
-
-	ByteBuffer clientBuf = state.writeBufferFor(state.getClientChannel());
-	ByteBuffer serverBuf = state.readBufferFor(state.getServerChannel());
-
-	// TODO: mejorar logica de lectura y escritura a los buffers
-	clientBuf.compact();
-
-	while (serverBuf.hasRemaining()) {
-
-	    clientBuf.put(serverBuf.get());
-
-	}
-
-	clientBuf.flip();
-
-    }
 
     private void handleClientRead(SelectionKey key, POP3SocketState state)
 	    throws IOException {
@@ -474,17 +485,33 @@ public class POP3SocketHandler implements TCPProtocol {
 	    throws IOException {
 
 	SocketChannel clientChannel = state.getClientChannel();
-	ByteBuffer buf = state.writeBufferFor(clientChannel);
+	ByteBuffer writeBuf = state.writeBufferFor(clientChannel);
+	ByteBuffer auxBuf = state.auxBufferFor(clientChannel);
+	
+	if (auxBuf.hasRemaining()) {
+	    
+	    if (!writeBuf.hasRemaining()) {
+		writeBuf.clear();
+	    } else {
+		writeBuf.compact();
+	    }
 
-	clientChannel.write(buf);
+	    while (writeBuf.hasRemaining() && auxBuf.hasRemaining()) {
+		writeBuf.put(auxBuf.get());
+	    }
 
-	if (buf.hasRemaining()) {
+	    writeBuf.flip();
+	}
+	
+	clientChannel.write(writeBuf);
+
+	if (writeBuf.hasRemaining() || auxBuf.hasRemaining()) {
 	    state.updateClientSubscription(key);
 	    return;
 	}
 
-	if (state.hasClientFlag(StatusEnum.CLOSING) && !buf.hasRemaining()) {
-
+	if (state.hasClientFlag(StatusEnum.CLOSING) && (!auxBuf.hasRemaining() && !writeBuf.hasRemaining())) {
+	    return;
 	}
 
 	ByteBuffer readBuf = state.readBufferFor(clientChannel);
@@ -507,11 +534,27 @@ public class POP3SocketHandler implements TCPProtocol {
 	    throws IOException {
 
 	SocketChannel serverChannel = state.getServerChannel();
-	ByteBuffer buf = state.writeBufferFor(serverChannel);
+	ByteBuffer auxBuf = state.auxBufferFor(serverChannel);
+	ByteBuffer writeBuf = state.writeBufferFor(serverChannel);
 
-	serverChannel.write(buf);
+	if (auxBuf.hasRemaining()) {
+	    
+	    if (!writeBuf.hasRemaining()) {
+		writeBuf.clear();
+	    } else {
+		writeBuf.compact();
+	    }
 
-	if (!buf.hasRemaining()) {
+	    while (writeBuf.hasRemaining() && auxBuf.hasRemaining()) {
+		writeBuf.put(auxBuf.get());
+	    }
+
+	    writeBuf.flip();
+	}
+	
+	serverChannel.write(writeBuf);
+	
+	if (!auxBuf.hasRemaining() && !writeBuf.hasRemaining()) {
 
 	    state.disableServerFlag(StatusEnum.WRITE);
 	    state.enableServerFlag(StatusEnum.READ);
@@ -558,7 +601,7 @@ public class POP3SocketHandler implements TCPProtocol {
     private void appendToClient(POP3SocketState state, String msg)
 	    throws IOException {
 
-	ByteBuffer buf = state.writeBufferFor(state.getClientChannel());
+	ByteBuffer buf = state.auxBufferFor(state.getClientChannel());
 	appendToBuffer(buf, msg, "\r\n");
 
     }
@@ -566,7 +609,7 @@ public class POP3SocketHandler implements TCPProtocol {
     private void appendToServer(POP3SocketState state, String msg)
 	    throws IOException {
 
-	ByteBuffer buf = state.writeBufferFor(state.getServerChannel());
+	ByteBuffer buf = state.auxBufferFor(state.getServerChannel());
 	appendToBuffer(buf, msg, null);
 
     }
@@ -574,11 +617,18 @@ public class POP3SocketHandler implements TCPProtocol {
     private void appendToBuffer(ByteBuffer buf, String msg, String ending)
 	    throws IOException {
 
-	buf.compact();
+	if (!buf.hasRemaining()) {
+	    buf.clear();
+	} else {
+	    buf.compact();
+	}
+
 	buf.put(msg.getBytes());
+	
 	if (ending != null) {
 	    buf.put(ending.getBytes());
 	}
+	
 	buf.flip();
     }
 
