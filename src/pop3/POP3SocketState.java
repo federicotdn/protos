@@ -7,6 +7,8 @@ import java.nio.channels.SocketChannel;
 
 public class POP3SocketState {
 
+    private static final int AUX_BUF_SIZE = 4096;
+    
     private int bufSize;
 
     public final SocketChannel clientChannel;
@@ -19,9 +21,11 @@ public class POP3SocketState {
 
     private ByteBuffer clientOutBuf;
     private ByteBuffer clientInBuf;
+    private ByteBuffer clientAuxBuf;
 
     private ByteBuffer serverOutBuf;
     private ByteBuffer serverInBuf;
+    private ByteBuffer serverAuxBuf;
 
     private StringBuffer currentLine;
     private boolean currentLineReady;
@@ -52,12 +56,15 @@ public class POP3SocketState {
 
 	clientOutBuf = ByteBuffer.allocate(this.bufSize);
 	clientInBuf = ByteBuffer.allocate(this.bufSize);
+	clientAuxBuf = ByteBuffer.allocate(AUX_BUF_SIZE);
 
 	clientOutBuf.flip();
 	clientInBuf.flip();
+	clientAuxBuf.flip();
 
 	serverOutBuf = null;
 	serverInBuf = null;
+	serverAuxBuf = null;
     }
 
     public StringBuffer getServerGreeting() {
@@ -219,10 +226,17 @@ public class POP3SocketState {
 	} else {
 	    serverOutBuf = ByteBuffer.allocate(bufSize);
 	}
+	
+	if (serverAuxBuf != null) {
+	    serverAuxBuf.clear();
+	} else {
+	    serverAuxBuf = ByteBuffer.allocate(AUX_BUF_SIZE);
+	}
 
 	serverGreeting = new StringBuffer();
 	serverInBuf.flip();
 	serverOutBuf.flip();
+	serverAuxBuf.flip();
     }
 
     public ByteBuffer writeBufferFor(SocketChannel channel) {
@@ -246,6 +260,17 @@ public class POP3SocketState {
 	    throw new IllegalArgumentException("Buffer: socket desconocido.");
 	}
     }
+    
+    public ByteBuffer auxBufferFor(SocketChannel channel) {
+
+	if (clientChannel == channel) {
+	    return clientAuxBuf;
+	} else if (pop3ServerChannel == channel) {
+	    return serverAuxBuf;
+	} else {
+	    throw new IllegalArgumentException("Buffer: socket desconocido.");
+	}
+    }
 
     public void updateServerSubscription(SelectionKey key)
 	    throws ClosedChannelException {
@@ -265,7 +290,7 @@ public class POP3SocketState {
 	}
 
 	if (hasServerFlag(StatusEnum.WRITE)) {
-	    if (serverOutBuf.hasRemaining()) {
+	    if (serverOutBuf.hasRemaining() || serverAuxBuf.hasRemaining()) {
 		flags |= SelectionKey.OP_WRITE;
 	    }
 	}
@@ -286,7 +311,7 @@ public class POP3SocketState {
 
 	if (hasClientFlag(StatusEnum.WRITE)) {
 
-	    if (clientOutBuf.hasRemaining()) {
+	    if (clientOutBuf.hasRemaining() || clientAuxBuf.hasRemaining()) {
 		flags |= SelectionKey.OP_WRITE;
 	    }
 
