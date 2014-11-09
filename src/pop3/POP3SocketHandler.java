@@ -38,6 +38,7 @@ public class POP3SocketHandler implements TCPProtocol {
 	
 	POP3SocketState socketState = new POP3SocketState(clientChannel, bufSize);
 	sendClientGreeting(socketState);
+	socketState.setSocketStatus(StatusEnum.WRITE_CLIENT);
 	socketState.updateClientSubscription(key);
 
 	serverState.setSocketHandler(clientChannel, this);
@@ -48,11 +49,12 @@ public class POP3SocketHandler implements TCPProtocol {
 
 	SocketChannel readChannel = (SocketChannel) key.channel();
 	POP3SocketState state = (POP3SocketState) key.attachment();
-
+	
 	if (readChannel == state.getClientChannel()) {
 
 	    clientReadChannel(state);
 	    handleClientRead(key, state);
+	    state.updateClientSubscription(key);
 
 	} else {
 	    handleServerRead(key, state);
@@ -105,13 +107,17 @@ public class POP3SocketHandler implements TCPProtocol {
 
 	    handleClientCommand(key, state, com);
 
-	} else {
-
+	} else if (state.hasLineError()) {
+	    
+	    state.setLineError(false);
 	    sendClientError(state, "Command was too long.");
-
+	    state.setSocketStatus(StatusEnum.WRITE_CLIENT);
+	    
+	} else {
+	    
+	    state.setSocketStatus(StatusEnum.READ_CLIENT);
+	    
 	}
-
-	state.updateClientSubscription(key);
     }
     
     private void handleClientCommand(SelectionKey key, POP3SocketState state, POP3Line com) throws IOException {
@@ -128,7 +134,7 @@ public class POP3SocketHandler implements TCPProtocol {
 		String error = com.getError();
 		error = (error == null) ? "" : error;
 		sendClientError(state, error);
-		
+		state.setSocketStatus(StatusEnum.WRITE_CLIENT);
 	    }
 	    
 	    return;
@@ -149,7 +155,7 @@ public class POP3SocketHandler implements TCPProtocol {
 	    }
 	    
 	    appendToClient(state, ".");
-
+	    state.setSocketStatus(StatusEnum.WRITE_CLIENT);
 	    break;
 	    
 	case USER:
@@ -220,7 +226,7 @@ public class POP3SocketHandler implements TCPProtocol {
 	    } else {
 		
 		sendClientError(state, "No username given, or connection to server failed.");
-		
+		state.setSocketStatus(StatusEnum.WRITE_CLIENT);
 	    }
 	    
 	    break;
@@ -235,6 +241,7 @@ public class POP3SocketHandler implements TCPProtocol {
 	    } else {
 		
 		sendClientOK(state);
+		state.setSocketStatus(StatusEnum.WRITE_CLIENT); //TODO: cambiar?
 		state.setClosing(true);
 	    }   
 	    
@@ -255,17 +262,10 @@ public class POP3SocketHandler implements TCPProtocol {
 	    } else {
 		
 		sendClientError(state, "Proxy: handle command locally.");
-		
+		state.setSocketStatus(StatusEnum.WRITE_CLIENT);
 	    }
 
 	    break;
-
-	default: //RSET, STAT, LIST, RETR, DELE, NOOP
-	    
-	    sendClientError(state, "Invalid command: " + com.getCommandString());
-	    
-	    break;
-	    
 	}
     }
 
@@ -277,6 +277,7 @@ public class POP3SocketHandler implements TCPProtocol {
 	
 	if (state.isCurrentLineInvalid()) {
 	    skipBufferLine(state);
+	    return;
 	}
 	
 	while (buf.hasRemaining()) {
@@ -297,6 +298,7 @@ public class POP3SocketHandler implements TCPProtocol {
 		state.resetCurentLine();
 		state.setCurrentLineInvalid(true);
 		skipBufferLine(state);
+		
 		break;
 		
 	    }
@@ -354,6 +356,7 @@ public class POP3SocketHandler implements TCPProtocol {
 	    
 	    if (lastChar != null && lastChar == '\r' && ch == '\n') {
 		state.setCurrentLineInvalid(false);
+		state.setLineError(true);
 		state.resetCurentLine();
 		return;
 	    }
@@ -397,8 +400,28 @@ public class POP3SocketHandler implements TCPProtocol {
 	
 	clientChannel.write(buf);
 	
+	if (buf.hasRemaining()) {
+	    state.updateClientSubscription(key);
+	    return;
+	}
+	
 	if (state.isClosing() && !buf.hasRemaining()) {
 	    
+	}
+	
+	ByteBuffer readBuf = state.readBufferFor(clientChannel);
+	
+	if (state.hasStatus(StatusEnum.WRITE_CLIENT)) {
+
+	    if (readBuf.hasRemaining()) {
+
+		handleClientRead(key, state);
+
+	    } else {
+		
+		state.setSocketStatus(StatusEnum.READ_CLIENT);
+		
+	    }
 	}
 	
 	state.updateClientSubscription(key);
