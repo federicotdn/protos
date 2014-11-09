@@ -5,9 +5,24 @@ public class POP3Line {
     private String commandString;
     private String[] params;
     private CommandEnum command;
+    private boolean valid;
+    private String error;
     
-    public POP3Line(CommandEnum command) {
-	this.command = command;
+    public POP3Line() {
+	this.valid = false;
+	this.command = null;
+    }
+    
+    public String getError() {
+        return error;
+    }
+
+    public void setError(String error) {
+        this.error = error;
+    }
+
+    public boolean isValid() {
+        return valid;
     }
     
     public String[] getParams() {
@@ -20,6 +35,11 @@ public class POP3Line {
     
     public CommandEnum getCommand() {
         return command;
+    }
+    
+    public void setCommand(CommandEnum command) {
+	this.command = command;
+	valid = (command != null);
     }
 
     public String getCommandString() {
