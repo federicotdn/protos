@@ -8,6 +8,8 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 
+import proxy.ServerStatistics;
+
 
 public class XMLManager {
     
@@ -31,6 +33,12 @@ public class XMLManager {
 	    Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
 	    L33tTransformationsMap transfMap = (L33tTransformationsMap) jaxbUnmarshaller.unmarshal( new File("src/resources/l33tTransformations.xml") );
 	    return transfMap.getTransformations();
+	}
+	
+	public static ServerStatistics loadServerStatistics() throws JAXBException{
+		JAXBContext jaxbContext = JAXBContext.newInstance(ServerStatistics.class);
+	    Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
+	    return (ServerStatistics) jaxbUnmarshaller.unmarshal( new File("src/resources/config.xml") );
 	}
 	
 	public static void saveParams(ServerConfigParams params) throws JAXBException {

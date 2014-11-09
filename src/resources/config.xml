@@ -8,4 +8,7 @@
 	<defaultPOP3Server>localhost</defaultPOP3Server>
 	<pop3BufferSize>4096</pop3BufferSize>
 	<capaList>USER</capaList>
+	<password>password</password>
+	<multiplexingEnabled>true</multiplexingEnabled>
+	<l33tEnabled>true</l33tEnabled>
 </params>

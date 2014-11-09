@@ -24,6 +24,7 @@ public class ServerConfig {
 		users = XMLManager.loadUserMap();
 		l33tTransformations = XMLManager.loadTransformations();
 		params = XMLManager.loadParams();
+
 		pop3Address = new InetSocketAddress(params.getPop3Host(),
 				params.getPop3Port());
 		rcpAddress = new InetSocketAddress(params.getRcpHost(),
@@ -37,6 +38,10 @@ public class ServerConfig {
 
 	public Integer getPOP3BufSize() {
 		return params.getPOP3BufferSize();
+	}
+	
+	public String getPassword() {
+		return params.getPassword();
 	}
 
 	public String getGreeting() {
