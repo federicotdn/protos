@@ -30,6 +30,8 @@ public class POP3SocketState {
     private boolean currentLineInvalid;
     private boolean lineError;
     
+    private StringBuffer serverGreeting;
+
     private StatusEnum socketStatus;
 
     public POP3SocketState(final SocketChannel clientChannel, int bufSize) {
@@ -58,6 +60,14 @@ public class POP3SocketState {
         
         serverOutBuf = null;
         serverInBuf = null;
+    }
+    
+    public StringBuffer getServerGreeting() {
+        return serverGreeting;
+    }
+
+    public void setServerGreeting(StringBuffer serverGreeting) {
+        this.serverGreeting = serverGreeting;
     }
     
     public boolean hasLineError() {
@@ -146,13 +156,21 @@ public class POP3SocketState {
     }
     
     public Character getLineLastChar() {
-	int len = currentLine.length();
+	return stringBufferLastChar(currentLine);
+    }
+    
+    public Character getGreetingLastChar() {
+	return stringBufferLastChar(serverGreeting);
+    }
+    
+    private Character stringBufferLastChar(StringBuffer sb) {
+	int len = sb.length();
 	
 	if (len == 0) {
 	    return null;
 	}
 	
-	return currentLine.charAt(len - 1);
+	return sb.charAt(len - 1);
     }
     
     public StringBuffer getCurrentLine() {
@@ -179,6 +197,7 @@ public class POP3SocketState {
 	    serverOutBuf = ByteBuffer.allocate(bufSize);
 	}
 	
+	serverGreeting = new StringBuffer();
 	serverInBuf.flip();
 	serverOutBuf.flip();
     }
@@ -207,20 +226,29 @@ public class POP3SocketState {
     
     public void updateServerSubscription(SelectionKey key) throws ClosedChannelException {
 	
-	int flags = 0;
-	
-	if (serverInBuf.limit() - serverInBuf.position() < serverInBuf.capacity()) {
-	    flags |= SelectionKey.OP_READ;
+	if (pop3ServerChannel == null) {
+	    return;
 	}
 	
-	if (serverOutBuf.hasRemaining()) {
-	    flags |= SelectionKey.OP_WRITE;
+	int flags = 0;
+
+	if (socketStatus == StatusEnum.READ_SERVER_WRITE_CLIENT || socketStatus == StatusEnum.READ_SERVER) {
+	    if (serverInBuf.limit() - serverInBuf.position() < serverInBuf.capacity()) {
+		flags |= SelectionKey.OP_READ;
+	    }
+	}
+
+	if (socketStatus == StatusEnum.WRITE_SERVER) {
+	    if (serverOutBuf.hasRemaining()) {
+		flags |= SelectionKey.OP_WRITE;
+	    }
 	}
 	
 	pop3ServerChannel.register(key.selector(), flags, this);
     }
     
     public void updateClientSubscription(SelectionKey key) throws ClosedChannelException {
+
 	
 	int flags = 0;
 

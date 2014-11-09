@@ -15,6 +15,7 @@ public class POP3CommandParser {
     public static final int MIN_CMD_LEN = 3;
     public static final int MAX_PARAM_LEN = 40;
     public static final int MAX_REQ_LEN = 255;
+    public static final int MAX_RESP_LEN = 512;
     
     private Map<String, CommandEnum> commandMap;
     
