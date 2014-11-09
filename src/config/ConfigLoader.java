@@ -24,10 +24,4 @@ public class ConfigLoader {
 	    params.validate();
 	    return params;
 	}
-
-	public static POP3Values loadPOP3Values(String fileName) throws JAXBException {
-	    JAXBContext jaxbContext = JAXBContext.newInstance(POP3Values.class);
-	    Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
-	    return (POP3Values) jaxbUnmarshaller.unmarshal( new File(fileName) );
-	}
 }

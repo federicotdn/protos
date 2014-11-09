@@ -27,7 +27,7 @@ public class POP3SocketState {
     
     private StringBuffer currentLine;
     private boolean currentLineReady;
-    private String lastError;
+    private boolean currentLineInvalid;
 
     public POP3SocketState(final SocketChannel clientChannel, int bufSize) {
 	
@@ -36,7 +36,7 @@ public class POP3SocketState {
 	pop3ServerHostname = null;
 	lastUSERCommand = null;
 	currentLine = new StringBuffer();
-	lastError = null;
+	currentLineInvalid = false;
 	this.bufSize = bufSize;
 	
         if (clientChannel == null) {
@@ -54,6 +54,14 @@ public class POP3SocketState {
         
         serverOutBuf = null;
         serverInBuf = null;
+    }
+    
+    public boolean isCurrentLineInvalid() {
+        return currentLineInvalid;
+    }
+
+    public void setCurrentLineInvalid(boolean currentLineInvalid) {
+        this.currentLineInvalid = currentLineInvalid;
     }
     
     public boolean isClosing() {
@@ -108,24 +116,19 @@ public class POP3SocketState {
 	currentLineReady = ready;
     }
     
-    public String removeLastError() {
-	String error = lastError;
-	lastError = null;
-	return error;
-    }
-    
-    
-    public void setLastError(String error) {
-	lastError = error;
-    }
-    
-    public boolean hasError() {
-	return lastError != null;
-    }
-    
     public void resetCurentLine() {
 	currentLine = new StringBuffer();
 	setCurrentLineReady(false);
+    }
+    
+    public Character getLineLastChar() {
+	int len = currentLine.length();
+	
+	if (len == 0) {
+	    return null;
+	}
+	
+	return currentLine.charAt(len - 1);
     }
     
     public StringBuffer getCurrentLine() {

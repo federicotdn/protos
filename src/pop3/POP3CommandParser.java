@@ -1,14 +1,9 @@
 package pop3;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.xml.bind.JAXBException;
-
-import config.ConfigLoader;
-import config.POP3Values;
 import exceptions.InvalidCommandException;
 
 public class POP3CommandParser {
@@ -17,14 +12,25 @@ public class POP3CommandParser {
     private static final String separateRegex = "\\s{1}";
     private static final String limitsRegex = ".*\\s$|^\\s.*";
     
-    private static final int MAX_CMD_LEN = 4;
-    private static final int MIN_CMD_LEN = 3;
-    private static final int MAX_PARAM_LEN = 40;
-    private static final int MAX_REQ_LEN = 255;
+    public static final int MAX_CMD_LEN = 4;
+    public static final int MIN_CMD_LEN = 3;
+    public static final int MAX_PARAM_LEN = 40;
+    public static final int MAX_REQ_LEN = 255;
     
-    public Integer getMaxRequestLen() {
-	return MAX_REQ_LEN;
+    private Map<String, CommandEnum> commandMap;
+    
+    public POP3CommandParser() {
+	
+	commandMap = new HashMap<String, CommandEnum>();
+	
+	for (CommandEnum com : CommandEnum.values()) {
+	    
+	    commandMap.put(com.toString(), com);
+	    
+	}
+	
     }
+    
     
     public POP3Line commandFromString(String com) throws InvalidCommandException {
 	
@@ -56,8 +62,9 @@ public class POP3CommandParser {
 	}
 	
 	String comUpper = firstCommand.toUpperCase();
+	CommandEnum pop3Com = commandMap.get(comUpper);
 	
-	POP3Line userCommand = new POP3Line(comUpper);
+	POP3Line userCommand = new POP3Line(pop3Com);
 	
 	if (comParts.length > 1) {
 	    userCommand.setParams(Arrays.copyOfRange(comParts, 1, comParts.length));

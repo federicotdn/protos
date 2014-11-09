@@ -4,9 +4,9 @@ public class POP3Line {
     
     private String commandString;
     private String[] params;
-    private String command;
+    private CommandEnum command;
     
-    public POP3Line(String command) {
+    public POP3Line(CommandEnum command) {
 	this.command = command;
     }
     
@@ -18,12 +18,8 @@ public class POP3Line {
 	this.params = params;
     }
     
-    public String getCommand() {
+    public CommandEnum getCommand() {
         return command;
-    }
-
-    public void setCommand(String command) {
-        this.command = command;
     }
 
     public String getCommandString() {
