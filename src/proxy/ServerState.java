@@ -10,48 +10,50 @@ import javax.xml.bind.JAXBException;
 
 public class ServerState {
 
-    private HashMap<SocketChannel, TCPProtocol> socketHandlers;
-    private ServerConfig config;
-    private ServerStatistics stats;
+	private HashMap<SocketChannel, TCPProtocol> socketHandlers;
+	private ServerConfig config;
+	private ServerStatistics stats;
 
-    public ServerState() throws JAXBException {
+	public ServerState() throws JAXBException {
 
-	socketHandlers = new HashMap<SocketChannel, TCPProtocol>();
-	config = new ServerConfig();
-	stats = new ServerStatistics();
-    }
-
-    public TCPProtocol getSocketHandler(SelectionKey key) throws Exception {
-	//TODO: Cambiar tipo de excepcion
-
-	SelectableChannel channel = key.channel();
-	TCPProtocol handler = socketHandlers.get(channel);
-
-	if (handler == null) {
-	    throw new Exception();
+		socketHandlers = new HashMap<SocketChannel, TCPProtocol>();
+		config = new ServerConfig();
+		stats = new ServerStatistics();
 	}
 
-	return handler;
-    }
+	public TCPProtocol getSocketHandler(SelectionKey key) throws Exception {
+		// TODO: Cambiar tipo de excepcion
 
-    public void setSocketHandler(SocketChannel channel, TCPProtocol handler) {
-	socketHandlers.put(channel, handler);
-    }
-    
-    public void removeSocketHandler(SocketChannel channel) {
-	socketHandlers.remove(channel);
-    }
+		SelectableChannel channel = key.channel();
+		TCPProtocol handler = socketHandlers.get(channel);
 
-    public String getUserPOP3Server(String user) {
-	Map<String, String> userMap = config.getUsers();
-	if (userMap.containsKey(user)) {
-	    return userMap.get(user);
-	} else {
-	    return config.getDefaultPOP3Server();
+		if (handler == null) {
+			throw new Exception();
+		}
+
+		return handler;
 	}
-    }
 
-    public ServerConfig getConfig() {
-	return config;
-    }
+	public void setSocketHandler(SocketChannel channel, TCPProtocol handler) {
+		socketHandlers.put(channel, handler);
+	}
+
+	public void removeSocketHandler(SocketChannel channel) {
+		socketHandlers.remove(channel);
+	}
+
+	public String getUserPOP3Server(String user) {
+		Map<String, String> userMap = config.getUsers();
+		if (userMap.containsKey(user)) {
+			return userMap.get(user);
+		} else {
+			return config.getDefaultPOP3Server();
+		}
+	}
+
+	public ServerConfig getConfig() {
+		return config;
+	}
+	
+	
 }

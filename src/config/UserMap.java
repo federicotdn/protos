@@ -23,4 +23,8 @@ public class UserMap {
     public void setUserMap(Map<String, String> userMap) {
         this.userMap = userMap;
     }
+    
+    public UserMap(Map<String, String> userMap) {
+    	this.userMap = userMap;
+    }
 }
