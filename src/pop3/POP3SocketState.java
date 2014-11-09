@@ -28,10 +28,14 @@ public class POP3SocketState {
     private StringBuffer currentLine;
     private boolean currentLineReady;
     private boolean currentLineInvalid;
+    private boolean lineError;
+    
+    private StatusEnum socketStatus;
 
     public POP3SocketState(final SocketChannel clientChannel, int bufSize) {
 	
 	serverConnected = false;
+	lineError = false;
 	closing = false;
 	pop3ServerHostname = null;
 	lastUSERCommand = null;
@@ -54,6 +58,26 @@ public class POP3SocketState {
         
         serverOutBuf = null;
         serverInBuf = null;
+    }
+    
+    public boolean hasLineError() {
+	return lineError;
+    }
+    
+    public void setLineError(boolean error) {
+	lineError = error;
+    }
+    
+    public StatusEnum getSocketStatus() {
+	return socketStatus;
+    }
+    
+    public void setSocketStatus(StatusEnum socketStatus) {
+	this.socketStatus = socketStatus;
+    }
+    
+    public boolean hasStatus(StatusEnum socketStatus) {
+	return this.socketStatus == socketStatus;
     }
     
     public boolean isCurrentLineInvalid() {
@@ -198,15 +222,22 @@ public class POP3SocketState {
     
     public void updateClientSubscription(SelectionKey key) throws ClosedChannelException {
 	
-	//TODO: fijarse mejor cuando subscribirse a READ
 	int flags = 0;
-	
-	if (clientInBuf.limit() - clientInBuf.position() < clientInBuf.capacity()) {
-	    flags |= SelectionKey.OP_READ;
+
+	if (socketStatus == StatusEnum.READ_CLIENT) {
+	    
+	    if (clientInBuf.limit() - clientInBuf.position() < clientInBuf.capacity()) {
+		flags |= SelectionKey.OP_READ;
+	    }
+	    
 	}
 	
-	if (clientOutBuf.hasRemaining()) {
-	    flags |= SelectionKey.OP_WRITE;
+	if (socketStatus == StatusEnum.WRITE_CLIENT || socketStatus == StatusEnum.READ_SERVER_WRITE_CLIENT) {
+
+	    if (clientOutBuf.hasRemaining()) {
+		flags |= SelectionKey.OP_WRITE;
+	    }
+	    
 	}
 	
 	clientChannel.register(key.selector(), flags, this);
