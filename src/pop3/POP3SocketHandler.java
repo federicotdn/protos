@@ -10,7 +10,6 @@ import java.util.List;
 
 import javax.xml.bind.JAXBException;
 
-import exceptions.InvalidCommandException;
 import proxy.ServerState;
 import proxy.TCPProtocol;
 
@@ -94,37 +93,47 @@ public class POP3SocketHandler implements TCPProtocol {
     }
 
     private void handleClientRead(SelectionKey key, POP3SocketState state) throws IOException {
-	
+
 	clientReadLine(state);
 
 	if (state.isCurrentLineReady()) {
 
-	    String line = state.getCurrentLine().toString();
+	    StringBuffer line = state.getCurrentLine();
 	    state.resetCurentLine();
 
-	    try {
+	    POP3Line com = pop3Parser.commandFromString(line);
 
-		POP3Line com = pop3Parser.commandFromString(line);
-
-		handleClientCommand(key, state, com);
-
-	    } catch (InvalidCommandException e) {
-
-		sendClientError(state, e.getMessage());
-
-	    }
+	    handleClientCommand(key, state, com);
 
 	} else {
 
 	    sendClientError(state, "Command was too long.");
 
 	}
-	
+
 	state.updateClientSubscription(key);
     }
     
     private void handleClientCommand(SelectionKey key, POP3SocketState state, POP3Line com) throws IOException {
 
+	//case: INVALID COMMAND
+	if (com.getCommand() == null) {
+	    
+	    if (state.isServerConnected()) {
+		
+		
+		
+	    } else {
+		
+		String error = com.getError();
+		error = (error == null) ? "" : error;
+		sendClientError(state, error);
+		
+	    }
+	    
+	    return;
+	}
+	
 	switch (com.getCommand()) {
 
 	case CAPA:
@@ -267,8 +276,6 @@ public class POP3SocketHandler implements TCPProtocol {
 	StringBuffer sb = state.getCurrentLine();
 	
 	if (state.isCurrentLineInvalid()) {
-		System.out.println("skip current line");
-		System.out.println("line len:" + new Integer(sb.length()).toString());
 	    skipBufferLine(state);
 	}
 	
@@ -289,8 +296,6 @@ public class POP3SocketHandler implements TCPProtocol {
 		
 		state.resetCurentLine();
 		state.setCurrentLineInvalid(true);
-		System.out.println("skip current line");
-		System.out.println("line len:" + new Integer(sb.length()).toString());
 		skipBufferLine(state);
 		break;
 		
@@ -308,7 +313,7 @@ public class POP3SocketHandler implements TCPProtocol {
 	
 	char lastChar = sb.charAt(lineLen - 1);
 
-	if (lineLen ==  - 1) {
+	if (lineLen == POP3CommandParser.MAX_REQ_LEN - 1) {
 
 	    if (lastChar != '\r') {
 
