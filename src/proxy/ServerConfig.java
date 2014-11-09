@@ -43,6 +43,18 @@ public class ServerConfig {
 	public String getPassword() {
 		return params.getPassword();
 	}
+	
+	public void setPassword(String password) {
+		params.setPassword(password);
+	}
+	
+	public boolean isMultiplexingState(){
+		return params.isMultiplexingEnabled();
+	}
+	
+	public boolean isL33tEnabled() {
+		return params.isL33tEnabled();
+	}
 
 	public String getGreeting() {
 		return params.getGreeting();

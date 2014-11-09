@@ -6,7 +6,9 @@ public enum RCPCommandEnum {
 	SET("SET"),
 	GET("GET"),
 	DELETE("DELETE"),
-	QUIT("QUIT");
+	QUIT("QUIT"),
+    OK("+OK"),
+    ERR("-ERR");
 	
 	private String command;
 	

@@ -12,9 +12,11 @@ public class RCPSocketState {
 	private ByteBuffer outBuffer;
 	private SocketChannel channel;
 	private static final int BUFF_CAP = 2048;
-
+	private boolean currentLineInvalid;
 	private StringBuffer currentLine;
 	private boolean currentLineReady;
+	private boolean loggedIn;
+	private boolean closing;
 
 	public RCPSocketState(SocketChannel channel) {
 		this.channel = channel;
@@ -22,6 +24,33 @@ public class RCPSocketState {
 		this.outBuffer = ByteBuffer.allocate(BUFF_CAP);
 		this.inBuffer.limit(0);
 		this.outBuffer.limit(0);
+		currentLine = new StringBuffer();
+		currentLineInvalid = false;
+		loggedIn = false;
+	}
+
+	public boolean isLoggedIn() {
+		return loggedIn;
+	}
+
+	public void setLoggedIn(boolean loggedIn) {
+		this.loggedIn = loggedIn;
+	}
+	
+	public boolean isClosing() {
+		return closing;
+	}
+
+	public void setClosing(boolean closing) {
+		this.closing = closing;
+	}
+
+	public boolean isCurrentLineInvalid() {
+		return currentLineInvalid;
+	}
+
+	public void setCurrentLineInvalid(boolean currentLineInvalid) {
+		this.currentLineInvalid = currentLineInvalid;
 	}
 
 	public StringBuffer getCurrentLine() {
@@ -39,14 +68,14 @@ public class RCPSocketState {
 	public void setCurrentLineReady(boolean currentLineReady) {
 		this.currentLineReady = currentLineReady;
 	}
-	
-	public Character getLastLine() {
+
+	public Character getLineLastChar() {
 		int len = currentLine.length();
-		
+
 		if (len == 0) {
 			return null;
 		}
-		
+
 		return currentLine.charAt(len - 1);
 	}
 
@@ -80,7 +109,7 @@ public class RCPSocketState {
 	public void setChannel(SocketChannel channel) {
 		this.channel = channel;
 	}
-	
+
 	public void resetCurentLine() {
 		currentLine = new StringBuffer();
 		setCurrentLineReady(false);

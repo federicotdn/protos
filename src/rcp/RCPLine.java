@@ -3,7 +3,7 @@ package rcp;
 public class RCPLine {
 	private String commandString;
 	private RCPCommandEnum command;
-	private String keyword;
+	private RCPKeywordEnum keyword;
 	private String[] parameters;
 
 	public RCPLine(RCPCommandEnum command) {
@@ -26,11 +26,11 @@ public class RCPLine {
 		this.command = command;
 	}
 
-	public String getKeyword() {
+	public RCPKeywordEnum getKeyword() {
 		return keyword;
 	}
 
-	public void setKeyword(String keyword) {
+	public void setKeyword(RCPKeywordEnum keyword) {
 		this.keyword = keyword;
 	}
 
