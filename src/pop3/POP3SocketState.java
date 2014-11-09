@@ -6,202 +6,225 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 
 public class POP3SocketState {
-    
+
     private int bufSize;
 
     public final SocketChannel clientChannel;
     public SocketChannel pop3ServerChannel;
-    
+
     private boolean serverConnected;
     private String pop3ServerHostname;
 
     private POP3Line lastUSERCommand;
-    
-    private boolean closing;
 
     private ByteBuffer clientOutBuf;
     private ByteBuffer clientInBuf;
-    
+
     private ByteBuffer serverOutBuf;
     private ByteBuffer serverInBuf;
-    
+
     private StringBuffer currentLine;
     private boolean currentLineReady;
     private boolean currentLineInvalid;
     private boolean lineError;
-    
+
     private StringBuffer serverGreeting;
 
-    private StatusEnum socketStatus;
+    private int serverStatus, clientStatus;
 
     public POP3SocketState(final SocketChannel clientChannel, int bufSize) {
-	
+
 	serverConnected = false;
 	lineError = false;
-	closing = false;
 	pop3ServerHostname = null;
 	lastUSERCommand = null;
 	currentLine = new StringBuffer();
 	currentLineInvalid = false;
+	serverStatus = clientStatus = 0;
 	this.bufSize = bufSize;
-	
-        if (clientChannel == null) {
-            throw new IllegalArgumentException();
-        }
-        
-        this.clientChannel = clientChannel;
-        this.pop3ServerChannel = null;
-        
-        clientOutBuf = ByteBuffer.allocate(this.bufSize);
-        clientInBuf = ByteBuffer.allocate(this.bufSize);
-        
-        clientOutBuf.flip();
-        clientInBuf.flip();
-        
-        serverOutBuf = null;
-        serverInBuf = null;
+
+	if (clientChannel == null) {
+	    throw new IllegalArgumentException();
+	}
+
+	this.clientChannel = clientChannel;
+	this.pop3ServerChannel = null;
+
+	clientOutBuf = ByteBuffer.allocate(this.bufSize);
+	clientInBuf = ByteBuffer.allocate(this.bufSize);
+
+	clientOutBuf.flip();
+	clientInBuf.flip();
+
+	serverOutBuf = null;
+	serverInBuf = null;
     }
-    
+
     public StringBuffer getServerGreeting() {
-        return serverGreeting;
+	return serverGreeting;
     }
 
     public void setServerGreeting(StringBuffer serverGreeting) {
-        this.serverGreeting = serverGreeting;
+	this.serverGreeting = serverGreeting;
     }
-    
+
     public boolean hasLineError() {
 	return lineError;
     }
-    
+
     public void setLineError(boolean error) {
 	lineError = error;
     }
-    
-    public StatusEnum getSocketStatus() {
-	return socketStatus;
+
+    public void printFlags() {
+
+	for (StatusEnum st : StatusEnum.values()) {
+
+	    if (hasServerFlag(st)) {
+		System.out.println("Has SERVER: " + st.name());
+	    }
+
+	    if (hasClientFlag(st)) {
+		System.out.println("Has CLIENT: " + st.name());
+	    }
+
+	}
+
+	if (serverStatus == 0 && clientStatus == 0) {
+	    System.out.println("Has NO FLAGS");
+	}
+
     }
-    
-    public void setSocketStatus(StatusEnum socketStatus) {
-	this.socketStatus = socketStatus;
+
+    public boolean hasServerFlag(StatusEnum status) {
+	return (serverStatus & status.getVal()) != 0;
     }
-    
-    public boolean hasStatus(StatusEnum socketStatus) {
-	return this.socketStatus == socketStatus;
+
+    public void enableServerFlag(StatusEnum status) {
+	serverStatus |= status.getVal();
     }
-    
+
+    public void disableServerFlag(StatusEnum status) {
+	serverStatus &= (~status.getVal());
+    }
+
+    public boolean hasClientFlag(StatusEnum status) {
+	return (clientStatus & status.getVal()) != 0;
+    }
+
+    public void enableClientFlag(StatusEnum status) {
+	clientStatus |= status.getVal();
+    }
+
+    public void disableClientFlag(StatusEnum status) {
+	clientStatus &= (~status.getVal());
+    }
+
     public boolean isCurrentLineInvalid() {
-        return currentLineInvalid;
+	return currentLineInvalid;
     }
 
     public void setCurrentLineInvalid(boolean currentLineInvalid) {
-        this.currentLineInvalid = currentLineInvalid;
-    }
-    
-    public boolean isClosing() {
-        return closing;
+	this.currentLineInvalid = currentLineInvalid;
     }
 
-    public void setClosing(boolean closing) {
-        this.closing = closing;
-    }
-    
     public String getPop3ServerHostname() {
-        return pop3ServerHostname;
+	return pop3ServerHostname;
     }
 
     public void setPop3ServerHostname(String pop3ServerHostname) {
-        this.pop3ServerHostname = pop3ServerHostname;
+	this.pop3ServerHostname = pop3ServerHostname;
     }
-    
+
     public boolean isServerConnected() {
 	return serverConnected;
     }
-    
+
     public void setServerConnected(boolean connected) {
 	serverConnected = connected;
     }
-    
+
     public POP3Line getLastUSERCommand() {
 	return lastUSERCommand;
     }
-    
+
     public void setLastUSERCommand(POP3Line com) {
 	lastUSERCommand = com;
     }
-    
+
     public SocketChannel getClientChannel() {
 	return clientChannel;
     }
-    
+
     public SocketChannel getServerChannel() {
 	return pop3ServerChannel;
     }
-    
+
     public void setServerChannel(SocketChannel pop3ServerChannel) {
 	this.pop3ServerChannel = pop3ServerChannel;
     }
-    
+
     public boolean isCurrentLineReady() {
 	return currentLineReady;
     }
-    
+
     public void setCurrentLineReady(boolean ready) {
 	currentLineReady = ready;
     }
-    
+
     public void resetCurentLine() {
 	currentLine = new StringBuffer();
 	setCurrentLineReady(false);
     }
-    
+
     public Character getLineLastChar() {
 	return stringBufferLastChar(currentLine);
     }
-    
+
     public Character getGreetingLastChar() {
 	return stringBufferLastChar(serverGreeting);
     }
-    
+
     private Character stringBufferLastChar(StringBuffer sb) {
 	int len = sb.length();
-	
+
 	if (len == 0) {
 	    return null;
 	}
-	
+
 	return sb.charAt(len - 1);
     }
-    
+
     public StringBuffer getCurrentLine() {
 	return currentLine;
     }
-    
+
     public void resetServerSettings() {
 	setPop3ServerHostname(null);
 	setServerConnected(false);
 	setServerChannel(null);
+	serverStatus = 0;
     }
 
     public void initServerBuffers() {
-	
+
 	if (serverInBuf != null) {
 	    serverInBuf.clear();
 	} else {
 	    serverInBuf = ByteBuffer.allocate(bufSize);
 	}
-	
+
 	if (serverOutBuf != null) {
 	    serverOutBuf.clear();
 	} else {
 	    serverOutBuf = ByteBuffer.allocate(bufSize);
 	}
-	
+
 	serverGreeting = new StringBuffer();
 	serverInBuf.flip();
 	serverOutBuf.flip();
     }
-    
+
     public ByteBuffer writeBufferFor(SocketChannel channel) {
 
 	if (clientChannel == channel) {
@@ -212,7 +235,7 @@ public class POP3SocketState {
 	    throw new IllegalArgumentException("Buffer: socket desconocido.");
 	}
     }
-    
+
     public ByteBuffer readBufferFor(SocketChannel channel) {
 
 	if (clientChannel == channel) {
@@ -222,52 +245,53 @@ public class POP3SocketState {
 	} else {
 	    throw new IllegalArgumentException("Buffer: socket desconocido.");
 	}
-    }    
-    
-    public void updateServerSubscription(SelectionKey key) throws ClosedChannelException {
-	
+    }
+
+    public void updateServerSubscription(SelectionKey key)
+	    throws ClosedChannelException {
+
 	if (pop3ServerChannel == null) {
 	    return;
 	}
-	
+
 	int flags = 0;
 
-	if (socketStatus == StatusEnum.READ_SERVER_WRITE_CLIENT || socketStatus == StatusEnum.READ_SERVER) {
-	    if (serverInBuf.limit() - serverInBuf.position() < serverInBuf.capacity()) {
+	if (hasServerFlag(StatusEnum.READ)
+		|| hasServerFlag(StatusEnum.GREETING)) {
+	    if (serverInBuf.limit() - serverInBuf.position() < serverInBuf
+		    .capacity()) {
 		flags |= SelectionKey.OP_READ;
 	    }
 	}
 
-	if (socketStatus == StatusEnum.WRITE_SERVER) {
+	if (hasServerFlag(StatusEnum.WRITE)) {
 	    if (serverOutBuf.hasRemaining()) {
 		flags |= SelectionKey.OP_WRITE;
 	    }
 	}
-	
+
 	pop3ServerChannel.register(key.selector(), flags, this);
     }
-    
-    public void updateClientSubscription(SelectionKey key) throws ClosedChannelException {
 
-	
+    public void updateClientSubscription(SelectionKey key)
+	    throws ClosedChannelException {
+
 	int flags = 0;
 
-	if (socketStatus == StatusEnum.READ_CLIENT) {
-	    
-	    if (clientInBuf.limit() - clientInBuf.position() < clientInBuf.capacity()) {
-		flags |= SelectionKey.OP_READ;
-	    }
-	    
+	if (hasClientFlag(StatusEnum.READ)) {
+
+	    flags |= SelectionKey.OP_READ;
+
 	}
-	
-	if (socketStatus == StatusEnum.WRITE_CLIENT || socketStatus == StatusEnum.READ_SERVER_WRITE_CLIENT) {
+
+	if (hasClientFlag(StatusEnum.WRITE)) {
 
 	    if (clientOutBuf.hasRemaining()) {
 		flags |= SelectionKey.OP_WRITE;
 	    }
-	    
+
 	}
-	
+
 	clientChannel.register(key.selector(), flags, this);
     }
 }

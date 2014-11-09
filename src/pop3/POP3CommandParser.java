@@ -35,11 +35,13 @@ public class POP3CommandParser {
     public POP3Line commandFromString(StringBuffer commandBuffer) {
 	
 	POP3Line userCommand = new POP3Line();
+	userCommand.setCommandString(commandBuffer.toString());
 	String com;
 	int commandLen = commandBuffer.length();
 	
 	if (commandLen < MIN_CMD_LEN) {
 	    userCommand.setError("Invalid command length.");
+	    userCommand.setCommandString(commandBuffer.toString());
 	    return userCommand;
 	}
 	
@@ -89,8 +91,7 @@ public class POP3CommandParser {
 	if (pop3Com == null) {
 	    userCommand.setError("Unknown command.");
 	}
-	
-	userCommand.setCommandString(com);
+
 	return userCommand;
     }
 }

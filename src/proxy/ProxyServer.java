@@ -9,6 +9,7 @@ import java.util.Iterator;
 import javax.xml.bind.JAXBException;
 
 import pop3.POP3SocketHandler;
+import pop3.POP3SocketState;
 import rcp.RCPSocketHandler;
 
 public class ProxyServer {
@@ -72,6 +73,10 @@ public class ProxyServer {
 		}
 
 		try {
+		    
+		    POP3SocketState st = (POP3SocketState) key.attachment();
+		    if (st != null) 
+			st.printFlags();
 
 		    if (key.isValid() && key.isReadable()) {
 			handler = state.getSocketHandler(key);
