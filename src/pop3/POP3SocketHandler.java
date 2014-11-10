@@ -31,8 +31,6 @@ public class POP3SocketHandler implements TCPProtocol {
     @Override
     public void handleAccept(SelectionKey key) throws IOException {
 
-	System.out.println("handle accept");
-
 	ServerSocketChannel listenChannel = (ServerSocketChannel) key.channel();
 
 	SocketChannel clientChannel = listenChannel.accept();
@@ -52,8 +50,6 @@ public class POP3SocketHandler implements TCPProtocol {
     @Override
     public void handleRead(SelectionKey key) throws IOException {
 
-	System.out.println("handle read");
-
 	SocketChannel readChannel = (SocketChannel) key.channel();
 	POP3SocketState state = (POP3SocketState) key.attachment();
 
@@ -68,15 +64,15 @@ public class POP3SocketHandler implements TCPProtocol {
 	}
     }
 
-    private void handleServerRead(SelectionKey key, POP3SocketState state)
-	    throws IOException {
+    private void handleServerRead(SelectionKey key, POP3SocketState state) throws IOException {
 
+	int readBytes;
 	SocketChannel serverChannel = state.getServerChannel();
 	ByteBuffer serverInBuf = state.readBufferFor(serverChannel);
 
 	prepareBuffer(serverInBuf);
 	
-	serverChannel.read(serverInBuf);
+	readBytes = serverChannel.read(serverInBuf);
 	serverInBuf.flip();
 
 	if (state.hasServerFlag(StatusEnum.GREETING)) {
@@ -85,6 +81,20 @@ public class POP3SocketHandler implements TCPProtocol {
 
 	} else {
 	    copyServerToClient(state);
+	}
+	
+	if (readBytes == -1) {
+	    
+	    if (state.hasServerFlag(StatusEnum.CLOSING)) {
+		
+		key.cancel();
+		serverChannel.close();
+		serverState.removeSocketHandler(serverChannel);
+		return;
+		
+	    } else {
+		throw new IOException("Lost connection to POP3 server.");
+	    }
 	}
 
 	state.updateClientSubscription(key);
@@ -197,8 +207,6 @@ public class POP3SocketHandler implements TCPProtocol {
 	    POP3Line com) throws IOException {
 
 	// case: INVALID COMMAND
-	System.out.println("line was: " + com.getCommandString());
-
 	if (com.getCommand() == null) {
 
 	    if (state.isServerConnected()) {
@@ -284,8 +292,9 @@ public class POP3SocketHandler implements TCPProtocol {
 	    pop3ServerChannel.configureBlocking(false);
 
 	    try {
-		pop3ServerChannel.connect(new InetSocketAddress(server,
-			POP3_PORT));
+		
+		pop3ServerChannel.connect(new InetSocketAddress(server, POP3_PORT));
+		
 	    } catch (UnresolvedAddressException e) {
 
 		sendClientError(state, "Unable to connect to POP3 server.");
@@ -297,13 +306,15 @@ public class POP3SocketHandler implements TCPProtocol {
 	    state.setPop3ServerHostname(server);
 	    state.setLastUSERCommand(com);
 	    serverState.setSocketHandler(pop3ServerChannel, this);
-	    pop3ServerChannel.register(key.selector(), SelectionKey.OP_CONNECT,
-		    state);
+	    pop3ServerChannel.register(key.selector(), SelectionKey.OP_CONNECT, state);
 
 	    break;
 
 	case QUIT:
 
+	    state.enableClientFlag(StatusEnum.CLOSING);
+	    state.enableServerFlag(StatusEnum.CLOSING);
+	    
 	    if (state.isServerConnected()) {
 
 		appendToServer(state, com.getCommandString());
@@ -312,9 +323,9 @@ public class POP3SocketHandler implements TCPProtocol {
 
 	    } else {
 
-		sendClientOK(state, "Exiting.");
-		state.enableClientFlag(StatusEnum.WRITE); // TODO: cambiar?
-		state.enableClientFlag(StatusEnum.CLOSING);
+		sendClientOK(state, "Closing.");
+		state.enableClientFlag(StatusEnum.WRITE);
+		
 	    }
 
 	    break;
@@ -392,7 +403,6 @@ public class POP3SocketHandler implements TCPProtocol {
 	    if (lastChar != '\r') {
 
 		return false;
-
 	    }
 
 	} else if (lineLen == maxLen) {
@@ -400,7 +410,6 @@ public class POP3SocketHandler implements TCPProtocol {
 	    if (lastChar != '\n') {
 
 		return false;
-
 	    }
 
 	} else if (lineLen > maxLen) {
@@ -408,7 +417,6 @@ public class POP3SocketHandler implements TCPProtocol {
 	}
 
 	return true;
-
     }
 
     private void skipBufferLine(POP3SocketState state) {
@@ -439,18 +447,21 @@ public class POP3SocketHandler implements TCPProtocol {
 
 	SocketChannel clientChannel = state.getClientChannel();
 	ByteBuffer buf = state.readBufferFor(clientChannel);
-
+	int readBytes;
+	
 	prepareBuffer(buf);
 
-	clientChannel.read(buf);
+	readBytes = clientChannel.read(buf);
 
+	if (readBytes == -1) {
+	    throw new IOException("Connection to client lost.");
+	}
+	
 	buf.flip();
     }
 
     @Override
     public void handleWrite(SelectionKey key) throws IOException {
-
-	System.out.println("handle write");
 
 	SocketChannel writeChannel = (SocketChannel) key.channel();
 	POP3SocketState state = (POP3SocketState) key.attachment();
@@ -463,8 +474,7 @@ public class POP3SocketHandler implements TCPProtocol {
 
     }
 
-    private void handleClientWrite(SelectionKey key, POP3SocketState state)
-	    throws IOException {
+    private void handleClientWrite(SelectionKey key, POP3SocketState state) throws IOException {
 
 	SocketChannel clientChannel = state.getClientChannel();
 	ByteBuffer writeBuf = state.writeBufferFor(clientChannel);
@@ -489,6 +499,11 @@ public class POP3SocketHandler implements TCPProtocol {
 	}
 
 	if (state.hasClientFlag(StatusEnum.CLOSING) && (!auxBuf.hasRemaining() && !writeBuf.hasRemaining())) {
+	    
+	    key.cancel();	    
+	    clientChannel.close();
+	    serverState.removeSocketHandler(clientChannel);
+	    
 	    return;
 	}
 
@@ -502,14 +517,12 @@ public class POP3SocketHandler implements TCPProtocol {
 
 	    state.disableClientFlag(StatusEnum.WRITE);
 	    state.enableClientFlag(StatusEnum.READ);
-
 	}
 
 	state.updateClientSubscription(key);
     }
 
-    private void handleServerWrite(SelectionKey key, POP3SocketState state)
-	    throws IOException {
+    private void handleServerWrite(SelectionKey key, POP3SocketState state) throws IOException {
 
 	SocketChannel serverChannel = state.getServerChannel();
 	ByteBuffer auxBuf = state.auxBufferFor(serverChannel);
@@ -545,8 +558,7 @@ public class POP3SocketHandler implements TCPProtocol {
 	appendToClient(state, msg.toString());
     }
 
-    private void sendClientError(POP3SocketState state, String error)
-	    throws IOException {
+    private void sendClientError(POP3SocketState state, String error) throws IOException {
 
 	StringBuffer msg = new StringBuffer(CommandEnum.ERR.toString());
 	msg.append(" ").append(error);
@@ -555,8 +567,7 @@ public class POP3SocketHandler implements TCPProtocol {
 
     }
 
-    private void sendClientOK(POP3SocketState state, String additional)
-	    throws IOException {
+    private void sendClientOK(POP3SocketState state, String additional) throws IOException {
 
 	StringBuffer msg = new StringBuffer(CommandEnum.OK.toString());
 	msg.append(" ").append(additional);
@@ -565,27 +576,21 @@ public class POP3SocketHandler implements TCPProtocol {
 
     }
 
-    private void appendToClient(POP3SocketState state, String msg)
-	    throws IOException {
+    private void appendToClient(POP3SocketState state, String msg) throws IOException {
 
 	ByteBuffer buf = state.auxBufferFor(state.getClientChannel());
 	appendToBuffer(buf, msg, "\r\n");
-
     }
 
-    private void appendToServer(POP3SocketState state, String msg)
-	    throws IOException {
+    private void appendToServer(POP3SocketState state, String msg) throws IOException {
 
 	ByteBuffer buf = state.auxBufferFor(state.getServerChannel());
 	appendToBuffer(buf, msg, null);
-
     }
 
-    private void appendToBuffer(ByteBuffer buf, String msg, String ending)
-	    throws IOException {
+    private void appendToBuffer(ByteBuffer buf, String msg, String ending) throws IOException {
 
 	prepareBuffer(buf);
-
 	buf.put(msg.getBytes());
 	
 	if (ending != null) {
@@ -627,7 +632,6 @@ public class POP3SocketHandler implements TCPProtocol {
 	} catch (IOException e) {
 
 	    abortServerConnection(key, state);
-
 	}
     }
 
@@ -638,11 +642,9 @@ public class POP3SocketHandler implements TCPProtocol {
 	} else {
 	    buf.compact();
 	}
-	
     }
     
-    private void abortServerConnection(SelectionKey key, POP3SocketState state)
-	    throws IOException {
+    private void abortServerConnection(SelectionKey key, POP3SocketState state) throws IOException {
 
 	SocketChannel pop3ServerChannel = state.getServerChannel();
 

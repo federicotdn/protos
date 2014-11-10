@@ -8,6 +8,7 @@ import java.nio.channels.SocketChannel;
 public class POP3SocketState {
 
     private static final int AUX_BUF_SIZE = 4096;
+    public static final String SUBJECT_FIELD = "\r\nSubject:";
     
     private int bufSize;
 
