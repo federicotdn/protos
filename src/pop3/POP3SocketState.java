@@ -34,8 +34,11 @@ public class POP3SocketState {
     private boolean lineError;
 
     private StringBuffer serverGreeting;
+<<<<<<< HEAD
     
     private int charsMatched;
+=======
+>>>>>>> 3eff359e33d4ec550fc3843ac3eab1b9352534d9
 
     private int serverStatus, clientStatus;
 

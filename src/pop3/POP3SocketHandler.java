@@ -110,7 +110,7 @@ public class POP3SocketHandler implements TCPProtocol {
 	prepareBuffer(clientAuxBuf);
 	
 	while (serverBuf.hasRemaining() && clientAuxBuf.hasRemaining()) {
-	    
+	   
 	    if (serverState.getConfig().isL33tEnabled()) {
 		
 		int index = state.getCharsMatched();
@@ -145,13 +145,15 @@ public class POP3SocketHandler implements TCPProtocol {
 	}
     }
     
-    private void readServerGreeting(SelectionKey key, POP3SocketState state) throws IOException {
+    private void readServerGreeting(SelectionKey key, POP3SocketState state)
+	    throws IOException {
 
 	SocketChannel serverChannel = state.getServerChannel();
 	ByteBuffer serverInBuf = state.readBufferFor(serverChannel);
 	StringBuffer sb = state.getServerGreeting();
 
 	while (serverInBuf.hasRemaining()) {
+
 	    Character lastChar = state.getGreetingLastChar();
 	    char ch = (char) serverInBuf.get();
 
@@ -175,11 +177,10 @@ public class POP3SocketHandler implements TCPProtocol {
 
 	    if (!isLineValid(sb, POP3CommandParser.MAX_RESP_LEN)) {
 
-		disconnectServerWithError(key, state);
-		return;
 	    }
+	    disconnectServerWithError(key, state);
+	    return;
 	}
-
     }
 
     private void disconnectServerWithError(SelectionKey key,
@@ -194,7 +195,6 @@ public class POP3SocketHandler implements TCPProtocol {
 	key.cancel();
 	serverChannel.close();
     }
-
 
     private void handleClientRead(SelectionKey key, POP3SocketState state)
 	    throws IOException {
@@ -355,6 +355,8 @@ public class POP3SocketHandler implements TCPProtocol {
 	default: //RSET, STAT, LIST, RETR, DELE, NOOP, PASS
 
 	    if (state.isServerConnected()) {
+
+		System.out.println("is connected pass");
 		
 		appendToServer(state, com.getCommandString());
 		state.enableServerFlag(StatusEnum.WRITE);
@@ -558,7 +560,7 @@ public class POP3SocketHandler implements TCPProtocol {
 	}
 	
 	serverChannel.write(writeBuf);
-	
+
 	if (!auxBuf.hasRemaining() && !writeBuf.hasRemaining()) {
 
 	    state.disableServerFlag(StatusEnum.WRITE);
