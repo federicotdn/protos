@@ -4,11 +4,10 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-import exceptions.InvalidCommandException;
-
 public class POP3CommandParser {
     
-    private static final String spaceRegex = ".*\\s{2,}.*";
+    private static final String printableRegex = "^[ -~]+$";
+    private static final String spaceRegex = ".* {2,}.*";
     private static final String separateRegex = "\\s{1}";
     private static final String limitsRegex = ".*\\s$|^\\s.*";
     
@@ -16,6 +15,7 @@ public class POP3CommandParser {
     public static final int MIN_CMD_LEN = 3;
     public static final int MAX_PARAM_LEN = 40;
     public static final int MAX_REQ_LEN = 255;
+    public static final int MAX_RESP_LEN = 512;
     
     private Map<String, CommandEnum> commandMap;
     
@@ -32,25 +32,42 @@ public class POP3CommandParser {
     }
     
     
-    public POP3Line commandFromString(String com) throws InvalidCommandException {
+    public POP3Line commandFromString(StringBuffer commandBuffer) {
 	
-	//TODO:
-	//Corregir para matchear mejor contraseñas.  PASS puede tener como argumento una contraseña
-	//que puede llegar a tener dos o mas espacios seguidos.
+	POP3Line userCommand = new POP3Line();
+	userCommand.setCommandString(commandBuffer.toString());
+	String com;
+	int commandLen = commandBuffer.length();
+	
+	if (commandLen < MIN_CMD_LEN) {
+	    userCommand.setError("Invalid command length.");
+	    userCommand.setCommandString(commandBuffer.toString());
+	    return userCommand;
+	}
+	
+	com = commandBuffer.substring(0, commandLen - 2);
+	
+	if (!com.matches(printableRegex)) {
+	    userCommand.setError("Commands should use printable ASCII characters.");
+	    return userCommand;
+	}
 	
 	if (com.matches(spaceRegex)) {
-	    throw new InvalidCommandException("All separators must be single space characters.");
+	    userCommand.setError("All separators must be single space characters.");
+	    return userCommand;
 	}
 	
 	if (com.length() == 0 || com.matches(limitsRegex)) {
-	    throw new InvalidCommandException("Invalid command.");
+	    userCommand.setError("Malformed command.");
+	    return userCommand;
 	}
 	
 	String[] comParts = com.split(separateRegex);
 	
 	for (String part : comParts) {
 	    if (part.length() > MAX_PARAM_LEN) {
-		throw new InvalidCommandException("Invalid parameter length.");
+		userCommand.setError("Invalid parameter length.");
+		return userCommand;
 	    }
 	}
 	
@@ -58,19 +75,23 @@ public class POP3CommandParser {
 	int len = firstCommand.length();
 	
 	if (len < MIN_CMD_LEN || len > MAX_CMD_LEN) {
-	    throw new InvalidCommandException("Invalid command length.");
+	    userCommand.setError("Invalid command length.");
+	    return userCommand;
 	}
 	
 	String comUpper = firstCommand.toUpperCase();
 	CommandEnum pop3Com = commandMap.get(comUpper);
 	
-	POP3Line userCommand = new POP3Line(pop3Com);
-	
 	if (comParts.length > 1) {
 	    userCommand.setParams(Arrays.copyOfRange(comParts, 1, comParts.length));
 	}
 	
-	userCommand.setCommandString(com);
+	userCommand.setCommand(pop3Com);
+	
+	if (pop3Com == null) {
+	    userCommand.setError("Unknown command.");
+	}
+
 	return userCommand;
     }
 }

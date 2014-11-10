@@ -30,4 +30,10 @@ public class ServerStatistics {
 		XMLManager.saveStats(this);
 	}
 	
+	public void validate() {
+		if (bytes < 0 || accessCount <0) {
+			throw new IllegalArgumentException("Invalid stat in stats.xml");
+		}
+	}
+	
 }

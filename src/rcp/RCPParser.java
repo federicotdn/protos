@@ -16,7 +16,7 @@ public class RCPParser {
 	private static final int MIN_CMD_LEN = 3;
 	private static final int MAX_KW_LEN = 12;
 	private static final int MIN_KW_LEN = 4;
-	private static final int MAX_PARAM_LEN = 50;
+	public static final int MAX_PARAM_LEN = 50;
 	public static final int MAX_REQUEST_LEN = 128;
 	public static final int MAX_BUF_SIZE = 65536;
 
@@ -139,7 +139,6 @@ public class RCPParser {
 		case DEFAULT:
 		case BUFFER_SIZE:
 		case L33T_TRANSFS:
-		case USERS:
 		case L33T:
 		case MPLX:
 			if (lineParts.length != 2) {

@@ -92,7 +92,10 @@ public class RCPSocketHandler implements TCPProtocol {
 			buf.clear();
 		}
 
-		channel.read(buf);
+		int bytes = channel.read(buf);
+		if (bytes == -1) {
+			throw new IOException();
+		}
 
 		buf.flip();
 	}
@@ -291,14 +294,6 @@ public class RCPSocketHandler implements TCPProtocol {
 							.getStats().getAccessCount().toString()));
 			appendToBuffer(buf, ".");
 			break;
-		case USERS:
-			sendOKMessage(buf, "");
-			Map<String, String> users = serverState.getConfig().getUsers();
-			for (String user : users.keySet()) {
-				appendToBuffer(buf, user + " " + users.get(user));
-			}
-			appendToBuffer(buf, ".");
-			break;
 		case L33T_TRANSFS:
 			sendOKMessage(buf, "");
 			Map<String, String> transformations = serverState.getConfig()
@@ -326,7 +321,6 @@ public class RCPSocketHandler implements TCPProtocol {
 					"Unauthorized access.");
 			return;
 		}
-
 		switch (commandLine.getKeyword()) {
 		case BUFFER_SIZE:
 			int prevBufSize = 0;
@@ -617,6 +611,7 @@ public class RCPSocketHandler implements TCPProtocol {
 		if (state.isClosing() && !buf.hasRemaining()) {
 			serverState.removeSocketHandler(channel);
 			channel.close();
+			key.cancel();
 			return;
 		}
 

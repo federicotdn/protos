@@ -15,7 +15,7 @@ public class ServerState {
 	private HashMap<SocketChannel, TCPProtocol> socketHandlers;
 	private ServerConfig config;
 	private ServerStatistics stats;
-	
+
 	public ServerState() throws JAXBException {
 
 		socketHandlers = new HashMap<SocketChannel, TCPProtocol>();
@@ -41,7 +41,14 @@ public class ServerState {
 	}
 
 	public void removeSocketHandler(SocketChannel channel) {
-		socketHandlers.remove(channel);
+		if (channel != null) {
+			socketHandlers.remove(channel);
+		}
+
+	}
+
+	public HashMap<SocketChannel, TCPProtocol> getSocketHandlers() {
+		return socketHandlers;
 	}
 
 	public String getUserPOP3Server(String user) {
@@ -60,7 +67,12 @@ public class ServerState {
 	public ServerStatistics getStats() {
 		return stats;
 	}
+	
+	public void saveAll() throws JAXBException {
+		config.saveParams();
+		config.saveTransformations();
+		config.saveUsers();
+		stats.save();
+	}
 
-	
-	
 }
