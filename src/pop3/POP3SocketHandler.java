@@ -139,15 +139,35 @@ public class POP3SocketHandler implements TCPProtocol {
 	}
     }
 
-    private void copyServerL33t(POP3SocketState state) {
+    private void copyServerL33t(POP3SocketState state) { //copiar contenido del server al cliente, posiblemente transformado
 
-	ByteBuffer clientAuxBuf = state.auxBufferFor(state.getClientChannel());
-	ByteBuffer serverBuf = state.readBufferFor(state.getServerChannel());
-	StringBuffer subject = state.getCurrentSubject();
+	ByteBuffer clientAuxBuf = state.auxBufferFor(state.getClientChannel()); //escribir a este
+	ByteBuffer serverBuf = state.readBufferFor(state.getServerChannel()); //leer desde este (1)
+	StringBuffer subject = state.getCurrentSubject(); //stringbuffer donde se arma el subject
 	
-	char ch = (char) serverBuf.get();
+	char ch = (char) serverBuf.get(); //ya lei el unico que me asegura que puedo leer
 
+	/*
+	 * state.subjectFound() devuelve TRUE si la variable currentSubject de state NO es null
+	 * hacer state.setCurrentSubject(null) cuando se termine de parsear el mail completamente,
+	 * para que devuelva FALSE la proxima vez y empieze a buscar Subject: de nuevo
+	 * 
+	 * Usar appendToClient para mandar datos al buffer de escritura auxiliar del cliente.
+	 * 
+	 * Hacer state.enableClientFlag(StatusEnum.WRITE) para anotar el cliente a WRITE en el
+	 * proximo updateSubscription.
+	 * 
+	 * Agregar una variable enum a POP3SocketState con el estado de la maquina de estados.
+	 * 
+	 */
 	if (state.subjectFound()) {
+	    
+	    // switch (state.getSubjectStatus()) {
+	    //
+	    // }
+	    
+	    
+	    //----------- codigo viejo -------------
 	    
 	    if (String.valueOf(ch).matches(WSP_REGEX) && !state.isFirstLine()) {
 		
