@@ -611,6 +611,7 @@ public class RCPSocketHandler implements TCPProtocol {
 		if (state.isClosing() && !buf.hasRemaining()) {
 			serverState.removeSocketHandler(channel);
 			channel.close();
+			key.cancel();
 			return;
 		}
 

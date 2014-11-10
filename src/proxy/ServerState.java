@@ -41,13 +41,20 @@ public class ServerState {
     }
 
     public void removeSocketHandler(SocketChannel channel) {
-	socketHandlers.remove(channel);
+	if (channel != null) {
+	    socketHandlers.remove(channel);
+	}
+
+    }
+
+    public HashMap<SocketChannel, TCPProtocol> getSocketHandlers() {
+	return socketHandlers;
     }
 
     public String getUserPOP3Server(String user) {
 
 	Map<String, String> userMap = config.getUsers();
-	
+
 	if (config.isMultiplexingEnabled() && userMap.containsKey(user)) {
 	    return userMap.get(user);
 	} else {
@@ -61,6 +68,13 @@ public class ServerState {
 
     public ServerStatistics getStats() {
 	return stats;
+    }
+
+    public void saveAll() throws JAXBException {
+	config.saveParams();
+	config.saveTransformations();
+	config.saveUsers();
+	stats.save();
     }
 
 }
