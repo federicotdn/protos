@@ -7,6 +7,8 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import rcp.RCPParser;
+
 /*
  * Clase instanciada usando JAXB.
  */
@@ -30,5 +32,14 @@ public class UserMap {
     
     public UserMap() {
     	
+    }
+    
+    public void validate() {
+    	for (String key: userMap.keySet()) {
+    		if (key.length() > RCPParser.MAX_PARAM_LEN || !key.matches("^[ -~]+$") || userMap.get(key).length() > RCPParser.MAX_PARAM_LEN || !userMap.get(key).matches("^[ -~]+$")) {
+    			throw new IllegalArgumentException(
+						"Invalid parameter in users.xml");
+    		}
+    	}
     }
 }

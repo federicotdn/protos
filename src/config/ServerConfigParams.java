@@ -9,6 +9,8 @@ import javax.xml.bind.annotation.XmlElementRef;
 import javax.xml.bind.annotation.XmlList;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import rcp.RCPParser;
+
 /*
  * Clase instanciada usando JAXB.
  */
@@ -131,7 +133,7 @@ public class ServerConfigParams {
 	public void validate() {
 		if (pop3Port == null || rcpPort == null || pop3Host == null
 				|| greeting == null || defaultPOP3Server == null
-				|| rcpHost == null || pop3BufferSize == null
+				|| rcpHost == null || pop3BufferSize == null || pop3BufferSize > RCPParser.MAX_BUF_SIZE
 				|| capaList == null || password == null) {
 			throw new IllegalArgumentException(
 					"Missing or invalid paramter in config.xml");

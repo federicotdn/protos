@@ -17,6 +17,7 @@ public class XMLManager {
 	    JAXBContext jaxbContext = JAXBContext.newInstance(UserMap.class);
 	    Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
 	    UserMap userMap = (UserMap) jaxbUnmarshaller.unmarshal( new File("src/resources/users.xml") );
+	    userMap.validate();
 	    return userMap.getUserMap();
 	}
 	
@@ -32,13 +33,15 @@ public class XMLManager {
 		JAXBContext jaxbContext = JAXBContext.newInstance(L33tTransformationsMap.class);
 	    Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
 	    L33tTransformationsMap transfMap = (L33tTransformationsMap) jaxbUnmarshaller.unmarshal( new File("src/resources/l33tTransformations.xml") );
+	    transfMap.validate();
 	    return transfMap.getTransformations();
 	}
 	
 	public static ServerStatistics loadServerStatistics() throws JAXBException{
 		JAXBContext jaxbContext = JAXBContext.newInstance(ServerStatistics.class);
 	    Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
-	    return (ServerStatistics) jaxbUnmarshaller.unmarshal( new File("src/resources/stats.xml") );
+	    ServerStatistics stats = (ServerStatistics) jaxbUnmarshaller.unmarshal( new File("src/resources/stats.xml") );
+	    return stats;
 	}
 	
 	public static void saveParams(ServerConfigParams params) throws JAXBException {

@@ -25,6 +25,15 @@ public class L33tTransformationsMap {
 	public L33tTransformationsMap() {
 		
 	}
+	
+	public void validate() {
+		for (String key: transformations.keySet()) {
+			if (!key.matches("^[ -~]$") || !transformations.get(key).matches("^[ -~]$")) {
+				throw new IllegalArgumentException(
+						"Invalid transformation in l33tTransformations.xml");
+			}
+		}
+	}
 	 
     
 }
