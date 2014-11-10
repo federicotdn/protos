@@ -36,9 +36,11 @@ public class POP3SocketState {
 	private StringBuffer serverGreeting;
 
 	private int charsMatched;
-	private StringBuffer currentSubject;
-	private boolean firstLine;
+	private Subject currentSubject;
+	
+	private L33tStateEnum l33tState;
 
+	
 	private int serverStatus, clientStatus;
 
 	public POP3SocketState(final SocketChannel clientChannel, int bufSize) {
@@ -73,19 +75,19 @@ public class POP3SocketState {
 		serverAuxBuf = null;
 	}
 	
-	public boolean isFirstLine() {
-	    return firstLine;
+	public L33tStateEnum getL33tState() {
+		return l33tState;
 	}
-	
-	public void setFirstLine(boolean firstLine) {
-	    this.firstLine = firstLine;
+
+	public void setL33tState(L33tStateEnum l33tState) {
+		this.l33tState = l33tState;
 	}
-	
-	public StringBuffer getCurrentSubject() {
+
+	public Subject getCurrentSubject() {
 	    return currentSubject;
 	}
 
-	public void setCurrentSubject(StringBuffer currentSubject) {
+	public void setCurrentSubject(Subject currentSubject) {
 	    this.currentSubject = currentSubject;
 	}
 	
@@ -230,9 +232,9 @@ public class POP3SocketState {
 		return stringBufferLastChar(serverGreeting);
 	}
 	
-	public Character getSubjectLastChar() {
-	    	return stringBufferLastChar(currentSubject);
-	}
+//	public Character getSubjectLastChar() {
+//	    	return stringBufferLastChar(currentSubject);
+//	}
 
 	private Character stringBufferLastChar(StringBuffer sb) {
 		int len = sb.length();

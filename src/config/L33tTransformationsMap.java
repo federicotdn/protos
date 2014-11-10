@@ -27,8 +27,9 @@ public class L33tTransformationsMap {
 	}
 	
 	public void validate() {
-		for (String key: transformations.keySet()) {
-			if (!key.matches("^[ -~]$") || !transformations.get(key).matches("^[ -~]$")) {
+		for (String s: transformations.keySet()) {
+			char c = s.charAt(0);
+			if (c < 32 || c > 126) {
 				throw new IllegalArgumentException(
 						"Invalid transformation in l33tTransformations.xml");
 			}

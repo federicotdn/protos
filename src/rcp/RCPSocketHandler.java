@@ -516,7 +516,7 @@ public class RCPSocketHandler implements TCPProtocol {
 				serverState.getConfig().saveTransformations();
 				sendOKMessage(buf, "");
 			} catch (JAXBException e) {
-				serverState.getConfig().setUsers(transformations);
+				serverState.getConfig().setL33tTransformations(transformations);
 				sendErrorMessage(buf, RCPParser.ERROR_INTERNAL,
 						"Internal error.");
 			}

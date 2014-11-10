@@ -132,4 +132,9 @@ public class ServerConfig {
 		this.l33tTransformations = l33tTransformations;
 	}
 	
+	public char getL33tTransformation(Character c) {
+		String transf = l33tTransformations.get(String.valueOf(c));
+		return transf == null ? c :transf.charAt(0);
+	}
+	
 }
