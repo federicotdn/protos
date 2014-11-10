@@ -7,9 +7,12 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.channels.UnresolvedAddressException;
+import java.security.acl.LastOwnerException;
 import java.util.List;
 
 import javax.xml.bind.JAXBException;
+
+import org.apache.commons.codec.net.QuotedPrintableCodec;
 
 import proxy.ServerState;
 import proxy.TCPProtocol;
@@ -17,6 +20,10 @@ import proxy.TCPProtocol;
 public class POP3SocketHandler implements TCPProtocol {
 
     public static final int POP3_PORT = 110;
+    
+    public static final int POP3_MAX_ASCII_LEN = 1000;
+    public static final int POP3_MAX_ENCODED_LEN = 78;
+    public static final String WSP_REGEX = "\\s";
 
     private POP3CommandParser pop3Parser;
     private ServerState serverState;
@@ -113,8 +120,16 @@ public class POP3SocketHandler implements TCPProtocol {
 	prepareBuffer(clientAuxBuf);
 
 	while (serverBuf.hasRemaining() && clientAuxBuf.hasRemaining()) {
-
+	    
+	    if (serverState.getConfig().isL33tEnabled()) {
+		
+		copyServerL33t(state);
+		
+	    } else {
+		    
 		clientAuxBuf.put(serverBuf.get());
+		
+	    }
 	}
 
 	clientAuxBuf.flip();
@@ -128,33 +143,67 @@ public class POP3SocketHandler implements TCPProtocol {
 
 	ByteBuffer clientAuxBuf = state.auxBufferFor(state.getClientChannel());
 	ByteBuffer serverBuf = state.readBufferFor(state.getServerChannel());
-	char readChar = (char) serverBuf.get();
+	StringBuffer subject = state.getCurrentSubject();
+	
+	char ch = (char) serverBuf.get();
 
 	if (state.subjectFound()) {
-
-	    System.out.println("SUBJECT FOUND");
-	    clientAuxBuf.put((byte) readChar);
+	    
+	    if (String.valueOf(ch).matches(WSP_REGEX) && !state.isFirstLine()) {
+		
+		
+		
+	    }
+	    
+	    Character lastChar = state.getSubjectLastChar();
+	    subject.append(ch);
+	    int lineLen = subject.length();
+	    
+	    if (lastChar != null && lastChar == '\r' && ch == '\n') {
+		
+		if (isLineValid(subject, POP3_MAX_ENCODED_LEN)) {
+		    
+		    //fijarse si es encoded
+		    //si es, responder
+		    //sino saltear
+		    
+		} else {
+		    
+		    //la linea es mas larga que 78 pero mas corta que 1000
+		    //tirar todo de una
+		}
+		
+	    }
+	    
+	    
+	    if (!isLineValid(subject, POP3_MAX_ASCII_LEN)) {
+		
+		
+		
+	    }
+	    
+	    //clientAuxBuf.put((byte) readChar);
 
 	} else {
 
 	    int index = state.getCharsMatched();
 	    char targetChar = POP3SocketState.SUBJECT_FIELD.charAt(index);
 
-	    if (readChar == targetChar) {
+	    if (ch == targetChar) {
 		state.incrementCharsMatched();
 	    } else {
 		state.resetCharsMatched();
 	    }
 
-	    if (state.getCharsMatched() == POP3SocketState.SUBJECT_FIELD
-		    .length()) {
+	    if (state.getCharsMatched() == POP3SocketState.SUBJECT_FIELD.length()) {
 
 		StringBuffer sb = new StringBuffer();
+		System.out.println("SUBJECT FOUND");
 		state.setCurrentSubject(sb);
 
 	    }
 
-	    clientAuxBuf.put((byte) readChar);
+	    clientAuxBuf.put((byte) ch);
 	}
 
     }

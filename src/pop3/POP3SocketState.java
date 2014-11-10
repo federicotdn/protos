@@ -37,6 +37,7 @@ public class POP3SocketState {
 
 	private int charsMatched;
 	private StringBuffer currentSubject;
+	private boolean firstLine;
 
 	private int serverStatus, clientStatus;
 
@@ -70,6 +71,14 @@ public class POP3SocketState {
 		serverOutBuf = null;
 		serverInBuf = null;
 		serverAuxBuf = null;
+	}
+	
+	public boolean isFirstLine() {
+	    return firstLine;
+	}
+	
+	public void setFirstLine(boolean firstLine) {
+	    this.firstLine = firstLine;
 	}
 	
 	public StringBuffer getCurrentSubject() {
@@ -219,6 +228,10 @@ public class POP3SocketState {
 
 	public Character getGreetingLastChar() {
 		return stringBufferLastChar(serverGreeting);
+	}
+	
+	public Character getSubjectLastChar() {
+	    	return stringBufferLastChar(currentSubject);
 	}
 
 	private Character stringBufferLastChar(StringBuffer sb) {
