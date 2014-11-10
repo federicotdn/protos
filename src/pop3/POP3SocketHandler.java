@@ -111,7 +111,30 @@ public class POP3SocketHandler implements TCPProtocol {
 	
 	while (serverBuf.hasRemaining() && clientAuxBuf.hasRemaining()) {
 	    
-	    clientAuxBuf.put(serverBuf.get());
+	    if (serverState.getConfig().isL33tEnabled()) {
+		
+		int index = state.getCharsMatched();
+		char targetChar = POP3SocketState.SUBJECT_FIELD.charAt(index);
+		
+		char readChar = (char) serverBuf.get();
+		
+		if (readChar == targetChar) {
+		    state.incrementCharsMatched();
+		} else {
+		    state.resetCharsMatched();
+		}
+		
+		if (state.getCharsMatched() == POP3SocketState.SUBJECT_FIELD.length()) {
+		    
+		    state.resetCharsMatched();
+		    
+		} else {
+		    
+		    clientAuxBuf.put((byte)readChar);   
+		}
+	    } else {
+		clientAuxBuf.put(serverBuf.get());
+	    }
 	    
 	}
 	
