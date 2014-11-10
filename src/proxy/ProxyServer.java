@@ -1,14 +1,18 @@
 package proxy;
 
 import java.io.IOException;
+import java.nio.channels.Channel;
+import java.nio.channels.SelectableChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
 import java.util.Iterator;
 
 import javax.xml.bind.JAXBException;
 
 import pop3.POP3SocketHandler;
+import pop3.POP3SocketState;
 import rcp.RCPSocketHandler;
 
 public class ProxyServer {
@@ -58,23 +62,21 @@ public class ProxyServer {
 				SelectionKey key = keyIterator.next();
 				ServerConfig config = state.getConfig();
 
-				if (key.isValid() && key.isAcceptable()) {
-
-					ServerSocketChannel listenChannel = (ServerSocketChannel) key
-							.channel();
-					int port = listenChannel.socket().getLocalPort();
-
-					if (port == config.getPOP3Port()) {
-						pop3Handler.handleAccept(key);
-					} else if (port == config.getRCPPort()) {
-						rcpHandler.handleAccept(key);
-					} else {
-						// throw Exception
-					}
-
-				}
-
 				try {
+
+					if (key.isValid() && key.isAcceptable()) {
+
+						ServerSocketChannel listenChannel = (ServerSocketChannel) key
+								.channel();
+						int port = listenChannel.socket().getLocalPort();
+
+						if (port == config.getPOP3Port()) {
+							pop3Handler.handleAccept(key);
+						} else if (port == config.getRCPPort()) {
+							rcpHandler.handleAccept(key);
+						} 
+
+					}
 
 					if (key.isValid() && key.isReadable()) {
 						handler = state.getSocketHandler(key);
@@ -91,10 +93,36 @@ public class ProxyServer {
 						handler.handleConnect(key);
 					}
 
-				} catch (Exception e) { // cambiar manejo de excepcion
-					throw e;
+				} catch (Exception e) {
+					SelectableChannel channel = key.channel();
+					if (channel == rcpListenChannel || channel == pop3ListenChannel) {
+						for (SocketChannel c: state.getSocketHandlers().keySet()) {
+							c.close();
+						}
+						try {
+							state.saveAll();
+						} catch (JAXBException e2) {
+							return;
+						}
+						return;
+						
+					} else {
+						if (state.getSocketHandler(key) == pop3Handler) {
+							POP3SocketState pop3State = (POP3SocketState) key.attachment();
+							state.removeSocketHandler(pop3State.getClientChannel());
+							key.cancel();
+							pop3State.getClientChannel().close();
+							if (pop3State.getServerChannel() != null) {
+								pop3State.getServerChannel().close();
+								state.removeSocketHandler(pop3State.getServerChannel());
+							}
+						} else  {
+							key.cancel();
+							state.removeSocketHandler((SocketChannel)channel);
+							channel.close();	
+						}
+					}
 				}
-
 				keyIterator.remove();
 			}
 
