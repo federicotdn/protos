@@ -36,6 +36,7 @@ public class POP3SocketState {
 	private StringBuffer serverGreeting;
 
 	private int charsMatched;
+	private StringBuffer currentSubject;
 
 	private int serverStatus, clientStatus;
 
@@ -46,6 +47,7 @@ public class POP3SocketState {
 		pop3ServerHostname = null;
 		lastUSERCommand = null;
 		currentLine = new StringBuffer();
+		currentSubject = null;
 		currentLineInvalid = false;
 		serverStatus = clientStatus = 0;
 		this.bufSize = bufSize;
@@ -68,6 +70,18 @@ public class POP3SocketState {
 		serverOutBuf = null;
 		serverInBuf = null;
 		serverAuxBuf = null;
+	}
+	
+	public StringBuffer getCurrentSubject() {
+	    return currentSubject;
+	}
+
+	public void setCurrentSubject(StringBuffer currentSubject) {
+	    this.currentSubject = currentSubject;
+	}
+	
+	public boolean subjectFound() {
+	    return (currentSubject != null);
 	}
 
 	public int getCharsMatched() {
@@ -287,8 +301,7 @@ public class POP3SocketState {
 		}
 	}
 
-	public void updateServerSubscription(SelectionKey key)
-			throws ClosedChannelException {
+	public void updateServerSubscription(SelectionKey key) throws ClosedChannelException {
 
 		if (pop3ServerChannel == null) {
 			return;
@@ -296,10 +309,8 @@ public class POP3SocketState {
 
 		int flags = 0;
 
-		if (hasServerFlag(StatusEnum.READ)
-				|| hasServerFlag(StatusEnum.GREETING)) {
-			if (serverInBuf.limit() - serverInBuf.position() < serverInBuf
-					.capacity()) {
+		if (hasServerFlag(StatusEnum.READ) || hasServerFlag(StatusEnum.GREETING)) {
+			if (serverInBuf.limit() - serverInBuf.position() < serverInBuf.capacity()) {
 				flags |= SelectionKey.OP_READ;
 			}
 		}
