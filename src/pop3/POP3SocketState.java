@@ -34,6 +34,8 @@ public class POP3SocketState {
     private boolean lineError;
 
     private StringBuffer serverGreeting;
+    
+    private int charsMatched;
 
     private int serverStatus, clientStatus;
 
@@ -67,7 +69,19 @@ public class POP3SocketState {
 	serverInBuf = null;
 	serverAuxBuf = null;
     }
+    
+    public int getCharsMatched() {
+        return charsMatched;
+    }
 
+    public void incrementCharsMatched() {
+	charsMatched++;
+    }
+    
+    public void resetCharsMatched() {
+	charsMatched = 0;
+    }
+    
     public StringBuffer getServerGreeting() {
 	return serverGreeting;
     }

@@ -122,8 +122,7 @@ public class POP3SocketHandler implements TCPProtocol {
 	}
     }
     
-    private void readServerGreeting(SelectionKey key, POP3SocketState state)
-	    throws IOException {
+    private void readServerGreeting(SelectionKey key, POP3SocketState state) throws IOException {
 
 	SocketChannel serverChannel = state.getServerChannel();
 	ByteBuffer serverInBuf = state.readBufferFor(serverChannel);
@@ -331,12 +330,8 @@ public class POP3SocketHandler implements TCPProtocol {
 	    break;
 
 	default: //RSET, STAT, LIST, RETR, DELE, NOOP, PASS
-	    
-	    System.out.println("case: pass");
 
 	    if (state.isServerConnected()) {
-
-		System.out.println("is connected pass");
 		
 		appendToServer(state, com.getCommandString());
 		state.enableServerFlag(StatusEnum.WRITE);
@@ -602,8 +597,6 @@ public class POP3SocketHandler implements TCPProtocol {
 
     @Override
     public void handleConnect(SelectionKey key) throws IOException {
-
-	System.out.println("handle connect");
 
 	SocketChannel pop3ServerChannel = (SocketChannel) key.channel();
 	POP3SocketState state = (POP3SocketState) key.attachment();
