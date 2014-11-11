@@ -59,7 +59,7 @@ public class POP3SocketHandler implements TCPProtocol {
 
 		serverState.setSocketHandler(clientChannel, this);
 		serverState.getStats().increaseAccessCount();
-		logger.logConnection("Client", clientChannel.getRemoteAddress());
+		logger.logConnection("Client:", clientChannel.getRemoteAddress());
 	}
 
 	@Override
@@ -102,11 +102,11 @@ public class POP3SocketHandler implements TCPProtocol {
 			copyServerToClient(state);
 
 		}
-
+		
 		if (readBytes == -1) {
 
 			if (state.hasServerFlag(StatusEnum.CLOSING)) {
-				logger.logDisconnection("Server", serverChannel.getRemoteAddress());
+				logger.logDisconnection("Server:", serverChannel.getRemoteAddress());
 				key.cancel();
 				serverChannel.close();
 				serverState.removeSocketHandler(serverChannel);
@@ -479,7 +479,7 @@ public class POP3SocketHandler implements TCPProtocol {
 		state.enableClientFlag(StatusEnum.WRITE);
 		state.disableServerFlag(StatusEnum.GREETING);
 
-		logger.logDisconnection("Server", serverChannel.getRemoteAddress());
+		logger.logDisconnection("Server:", serverChannel.getRemoteAddress());
 		state.resetServerSettings();
 		key.cancel();
 		serverChannel.close();
@@ -564,7 +564,7 @@ public class POP3SocketHandler implements TCPProtocol {
 
 				// Habia una coneccion a otro servidor
 				if (!oldServerHostname.equals(server)) {
-					logger.logDisconnection("Server", oldServerChannel.getRemoteAddress());
+					logger.logDisconnection("Server:", oldServerChannel.getRemoteAddress());
 					oldServerChannel.keyFor(key.selector()).cancel();
 					oldServerChannel.close();
 					serverState.removeSocketHandler(oldServerChannel);
@@ -812,6 +812,14 @@ public class POP3SocketHandler implements TCPProtocol {
 			state.updateClientSubscription(key);
 			return;
 		}
+		
+		ByteBuffer readServerBuf = state.readBufferFor(state.getServerChannel());
+		if (readServerBuf != null && readServerBuf.hasRemaining() && state.hasServerFlag(StatusEnum.READ)) {
+		    copyServerToClient(state);
+		    state.updateClientSubscription(key);
+		    state.updateServerSubscription(key);
+		    return;
+		}
 
 		if (state.hasClientFlag(StatusEnum.CLOSING)
 				&& (!auxBuf.hasRemaining() && !writeBuf.hasRemaining())
@@ -950,11 +958,8 @@ public class POP3SocketHandler implements TCPProtocol {
 				
 				logger.logConnection("Server", pop3ServerChannel.getRemoteAddress());
 
-			} else {
-				
+			} else {		
 				abortServerConnection(key, state);
-				
-
 			}
 
 		} catch (IOException e) {

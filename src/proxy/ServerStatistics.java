@@ -7,6 +7,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import org.apache.logging.log4j.LogManager;
 
+import config.CustomLogger;
 import config.XMLManager;
 
 @XmlRootElement(name = "stats")
@@ -37,7 +38,7 @@ public class ServerStatistics {
 		try {
 			this.save();
 		} catch (JAXBException e) {
-			LogManager.getLogger().error("Exception", e.getCause());
+			CustomLogger.getInsance().getLogger().error("Exception", e.getCause());
 		}
 	}
 
@@ -47,7 +48,7 @@ public class ServerStatistics {
 			try {
 				this.save();
 			} catch (JAXBException e) {
-				LogManager.getLogger().error("Exception", e.getCause());
+				CustomLogger.getInsance().getLogger().error("Exception", e.getCause());
 			}
 		}
 	}

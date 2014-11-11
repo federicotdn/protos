@@ -32,15 +32,19 @@ public class CustomLogger {
 	}
 
 	public void logWrittenBytes(int bytes, SocketAddress address, String label) {
-		logBytes(address, bytes, label, "writen to");
+		logBytes(address, bytes, label, "written to");
 	}
 
 	public void logAction(String label, SocketAddress address, String action) {
-		logger.info(label + ": " + address + " " + action);
+		logger.info(label + " " + address + " " + action);
 	}
 
 	public void logDisconnection(String label, SocketAddress address) {
 		logAction(label, address, "disconnected.");
+	}
+	
+	public void logDisconnection(SocketAddress address) {
+		logAction("", address, "disconnected.");
 	}
 
 	public void logInvalidCommand(String commandString, SocketAddress address) {

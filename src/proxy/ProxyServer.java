@@ -11,6 +11,7 @@ import java.util.Iterator;
 
 import javax.xml.bind.JAXBException;
 
+import config.CustomLogger;
 import pop3.POP3SocketHandler;
 import pop3.POP3SocketState;
 import rcp.RCPSocketHandler;
@@ -26,6 +27,8 @@ public class ProxyServer {
 
 	private POP3SocketHandler pop3Handler;
 	private RCPSocketHandler rcpHandler;
+	
+	private static CustomLogger logger;
 
 	public void init() throws IOException, JAXBException {
 
@@ -43,6 +46,8 @@ public class ProxyServer {
 
 		pop3Handler = new POP3SocketHandler(state);
 		rcpHandler = new RCPSocketHandler(state);
+		
+		logger = CustomLogger.getInsance();
 	}
 
 	public void begin() throws Exception {
@@ -97,11 +102,16 @@ public class ProxyServer {
 					SelectableChannel channel = key.channel();
 					if (channel == rcpListenChannel || channel == pop3ListenChannel) {
 						for (SocketChannel c: state.getSocketHandlers().keySet()) {
+							if (channel == pop3ListenChannel) {
+								logger.logDisconnection(c.getRemoteAddress());
+							}
 							c.close();
 						}
 						try {
 							state.saveAll();
+							logger.getLogger().error("Fatal error: " + e.getCause());
 						} catch (JAXBException e2) {
+							logger.getLogger().error("Error: " + e.getCause());
 							return;
 						}
 						return;
@@ -109,10 +119,12 @@ public class ProxyServer {
 					} else {
 						if (state.getSocketHandler(key) == pop3Handler) {
 							POP3SocketState pop3State = (POP3SocketState) key.attachment();
+							logger.logDisconnection("Client:", pop3State.getClientChannel().getRemoteAddress());
 							state.removeSocketHandler(pop3State.getClientChannel());
 							key.cancel();
 							pop3State.getClientChannel().close();
 							if (pop3State.getServerChannel() != null) {
+								logger.logDisconnection("Server:", pop3State.getServerChannel().getRemoteAddress());
 								pop3State.getServerChannel().close();
 								state.removeSocketHandler(pop3State.getServerChannel());
 							}

@@ -327,9 +327,7 @@ public class POP3SocketState {
 		int flags = 0;
 
 		if (hasServerFlag(StatusEnum.READ) || hasServerFlag(StatusEnum.GREETING)) {
-			if (serverInBuf.limit() - serverInBuf.position() < serverInBuf.capacity()) {
-				flags |= SelectionKey.OP_READ;
-			}
+		    flags |= SelectionKey.OP_READ;
 		}
 
 		if (hasServerFlag(StatusEnum.WRITE)) {
