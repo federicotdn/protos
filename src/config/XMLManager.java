@@ -34,6 +34,7 @@ public class XMLManager {
 		copyFile("config.xml");
 		copyFile("stats.xml");
 		copyFile("l33tTransformations.xml");
+
 	}
 
 	public Map<String, String> loadUserMap() throws JAXBException {
@@ -102,10 +103,6 @@ public class XMLManager {
 		Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
 
 		File f = new File("config/l33tTransformations.xml");
-		if (!f.exists()) {
-			ServerStatistics stats = new ServerStatistics();
-			saveStats(stats);
-		}
 		jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
 		L33tTransformationsMap transfMap = new L33tTransformationsMap(
 				transfomrations);
@@ -121,27 +118,31 @@ public class XMLManager {
 	}
 
 	private void copyFile(String name) {
-		InputStream in = getClass().getClassLoader().getResourceAsStream(
-				"resources/" + name);
-		File targetFile = new File("config/" + name);
-		OutputStream outStream = null;
-		try {
-			int c;
-			outStream = new FileOutputStream(targetFile);
-			while ((c = in.read()) != -1) {
-				outStream.write(c);
-			}
-			outStream.close();
-		} catch (Exception e) {
+		File file = new File("config/" + name);
+		
+		if (!file.exists()) {
+			InputStream in = getClass().getClassLoader().getResourceAsStream(
+					"resources/" + name);
+			File targetFile = new File("config/" + name);
+			OutputStream outStream = null;
 			try {
-				if (outStream != null) {
-					outStream.close();
+				int c;
+				outStream = new FileOutputStream(targetFile);
+				while ((c = in.read()) != -1) {
+					outStream.write(c);
 				}
-			} catch (IOException e2) {
-				throw new RuntimeException(e2);
-			}
+				outStream.close();
+			} catch (Exception e) {
+				try {
+					if (outStream != null) {
+						outStream.close();
+					}
+				} catch (IOException e2) {
+					throw new RuntimeException(e2);
+				}
 
-			throw new RuntimeException("Error loading config files.");
+				throw new RuntimeException("Error loading config files. File: " + file.getAbsolutePath());
+			}
 		}
 
 	}

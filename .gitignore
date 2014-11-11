@@ -50,5 +50,3 @@ pom.xml.next
 release.properties
 logs/*
 src/resources/stats.xml
-
-

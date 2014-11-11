@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<users>
+	<userMap>
+		<entry>
+			<key>mike@aol.com</key>
+			<value>localhost</value>
+		</entry>
+		<entry>
+			<key>federicotedin@gmail.com</key>
+			<value>192.168.1.4</value>
+		</entry>
+	</userMap>
+</users>
