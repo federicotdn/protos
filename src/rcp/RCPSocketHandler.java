@@ -210,6 +210,7 @@ public class RCPSocketHandler implements TCPProtocol {
 			handleQuit(state);
 			break;
 		default:
+			sendErrorMessage(buf, RCPParser.ERROR_INVALID_CMD, "Invalid command");
 			break;
 		}
 

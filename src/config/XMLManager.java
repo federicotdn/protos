@@ -39,14 +39,14 @@ public class XMLManager {
 	}
 	
 	public static ServerStatistics loadServerStatistics() throws JAXBException, IOException{
-		File f = new File("src/resources/stats.xml");
-		if (!f.exists()) {
-			ServerStatistics stats = new ServerStatistics();
-			saveStats(stats);
-		}
+//		File f = new File("src/resources/stats.xml");
+//		if (!f.exists()) {
+//			ServerStatistics stats = new ServerStatistics();
+//			saveStats(stats);
+//		}
 		JAXBContext jaxbContext = JAXBContext.newInstance(ServerStatistics.class);
 	    Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
-	    ServerStatistics stats = (ServerStatistics) jaxbUnmarshaller.unmarshal( new File("src/resources/stats.xml") );
+	    ServerStatistics stats = (ServerStatistics) jaxbUnmarshaller.unmarshal(XMLManager.class.getResourceAsStream("/resources/stats.xml") );
 	    return stats;
 	}
 	

@@ -3,12 +3,8 @@ package proxy;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
-
-import org.apache.logging.log4j.LogManager;
 
 import config.CustomLogger;
 import config.XMLManager;
@@ -20,7 +16,7 @@ public class ServerStatistics {
 	private Integer accessCount;
 	@XmlTransient
 	private Integer currentBytes = 0;
-	private static final int AMOUNT_BYTES = 5000;
+	private static final int AMOUNT_BYTES = 20000;
 
 	public ServerStatistics() {
 		bytes = 0;
@@ -47,7 +43,6 @@ public class ServerStatistics {
 		accessCount++;
 		try {
 			this.save();
-			CustomLogger.getInsance().logStatsSaved(this);
 		} catch (JAXBException e) {
 			CustomLogger.getInsance().getLogger().error("Exception", e.getCause());
 		}
@@ -60,7 +55,6 @@ public class ServerStatistics {
 			try {
 				this.save();
 				currentBytes = 0;
-				CustomLogger.getInsance().logStatsSaved(this);
 			} catch (JAXBException e) {
 				CustomLogger.getInsance().getLogger().error("Exception", e.getCause());
 			}
