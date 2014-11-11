@@ -807,17 +807,17 @@ public class POP3SocketHandler implements TCPProtocol {
 		int writtenBytes = clientChannel.write(writeBuf);
 		logger.logWrittenBytes(writtenBytes, clientChannel, "client");
 		serverState.getStats().addBytes(writtenBytes);
-
-		if (writeBuf.hasRemaining() || auxBuf.hasRemaining()) {
-			state.updateClientSubscription(key);
-			return;
-		}
 		
 		ByteBuffer readServerBuf = state.readBufferFor(state.getServerChannel());
-		if (readServerBuf != null && readServerBuf.hasRemaining() && state.hasServerFlag(StatusEnum.READ)) {
+		if (state.isServerConnected() && readServerBuf.hasRemaining() && state.hasServerFlag(StatusEnum.READ)) {
 		    copyServerToClient(state);
 		    state.updateClientSubscription(key);
 		    state.updateServerSubscription(key);
+		    return;
+		}
+		
+		if (writeBuf.hasRemaining() || auxBuf.hasRemaining()) {
+		    state.updateClientSubscription(key);
 		    return;
 		}
 

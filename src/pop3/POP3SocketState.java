@@ -336,7 +336,9 @@ public class POP3SocketState {
 			}
 		}
 
-		pop3ServerChannel.register(key.selector(), flags, this);
+		if (pop3ServerChannel.isOpen()) {
+		    pop3ServerChannel.register(key.selector(), flags, this);
+		}
 	}
 
 	public void updateClientSubscription(SelectionKey key)
@@ -358,6 +360,8 @@ public class POP3SocketState {
 
 		}
 
-		clientChannel.register(key.selector(), flags, this);
+		if (clientChannel.isOpen()) {
+		    clientChannel.register(key.selector(), flags, this);
+		}
 	}
 }
