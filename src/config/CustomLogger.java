@@ -42,7 +42,7 @@ public class CustomLogger {
 	public void logDisconnection(String label, SocketAddress address) {
 		logAction(label, address, "disconnected.");
 	}
-	
+
 	public void logDisconnection(SocketAddress address) {
 		logAction("", address, "disconnected.");
 	}
@@ -58,18 +58,21 @@ public class CustomLogger {
 
 	private void logBytes(SocketAddress address, int bytes, String label,
 			String action) {
-		logger.info(bytes + " bytes " + action + " " + label + " " + address
-				+ ".");
+		if (bytes > 0) {
+			logger.info(bytes + " bytes " + action + " " + label + " "
+					+ address + ".");
+		}
+
 	}
 
 	public void logCommand(POP3Line com, SocketAddress address) {
 		StringBuffer sb = new StringBuffer();
-		if (com.getParams() != null){
+		if (com.getParams() != null) {
 			for (String s : com.getParams()) {
 				sb.append(s + " ");
 			}
 		}
-		
+
 		logger.info("Client: " + address + " executed command '"
 				+ com.getCommand()
 				+ (sb.length() != 0 ? "' with parameters '" : "") + sb + "'.");
