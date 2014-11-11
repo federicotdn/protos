@@ -1,8 +1,8 @@
-TPE Protocolos de comuncación
+TPE Protocolos de comunicación
 
 El proyecto utiliza maven. Por lo tanto para correrlo ejecutarlo como mvn install. Esto instalará todas las dependencias y compilará el proyecto. Asegurarse de tener todos los permisos necesarios ya que el programa creara la carpeta logs y la carpeta la carpeta config.
 
-Para ejecutar el programa se debe correr en una terminal con el comando java -jar. Deben estar presentes los archivos de configuración l33tTransformation.xml, stats.xml, config.xml y users.xml para que el servidor pueda iniciar. Estos archivos se generaran automáticamente cuando empiece el servidor. En caso de no hacerlo, deberían estar presentes en la carpeta config en el directorio de trabajo actual.
+Para ejecutar el programa se debe correr en una terminal con el comando java -jar. Deben estar presentes los archivos de configuración l33tTransformation.xml, stats.xml, config.xml y users.xml para que el servidor pueda iniciar. Estos archivos se generaran automáticamente cuando empiece el servidor. En caso de no hacerlo, deberán estar presentes en la carpeta config en el directorio de trabajo actual.
 
 
 Ejemplos de los archivos de configuración.

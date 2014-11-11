@@ -1,4 +1,4 @@
-﻿Remote Control Protocol - Version 1
+Remote Control Protocol - Version 1
 
 
 Este documento especifica el funcionamiento de protocolo encargado para manejo de la configuración y el monitoreo de un servidor proxy de POP3. 
@@ -7,33 +7,33 @@ Este documento especifica el funcionamiento de protocolo encargado para manejo d
 
 
 Tabla de contenidos
-Operaciones básicas………………………...………………………………………………..1
-Estado de AUTORIZACION…………………..………...……………………………...…....2
-Estado de TRANSACCION…………………………………………………………………..3
-Errores…………………………………………………………………………………………..8
+	Operaciones básicas……………………………………………………………………………………………………1
+	Estado de AUTORIZACION……………………………………………………………………………………………2
+	Estado de TRANSACCION………………………………………………………………………………………………3
+	Errores……………………………………………………………………………………………………………………………………8
 
 
 
 
-1. Operaciones básicas
+1. Operaciones basicas
 
 
-           Inicialmente el servidor comienza escuchando en puerto TCP 4546. Cuando un cliente quiere utilizar el servicio debe establecer una         coneccion TCP con el servidor. Cuando se establece la conexión el servidor responde con un saludo, indicado por el "+OK" y un mensaje opcional. Luego el servidor intercambian con el cliente comandos y respuestas hasta que se cierra la coneccion.
+           Inicialmente el servidor comienza escuchando en puerto TCP 4546. Cuando un cliente quiere utilizar el servicio debe establecer una         coneccion TCP con el servidor. Cuando se establece la conexion el servidor responde con un saludo, indicado por el "+OK" y un mensaje opcional. Luego el servidor intercambian con el cliente comandos y respuestas hasta que se cierra la coneccion.
 
 
-           Los mensajes de RCP están formados por un comando y una palabra clave, no sensibles a la diferencia entre mayusculas y minusculas, posiblemente son seguidos por uno o más argumentos. Todos los mensajes son terminados por un \r\n. Las palabras claves y los argumentos son caracteres ASCII imprimibles, son separados entre sí por un espacio. Los comandos son de entre 3 y 6 caracteres de largo. Cada argumento puede tener hasta 50 caracteres de largo. Una linea puede tener hasta 128 caracteres contando el fin de linea.        
+           Los mensajes de RCP estan formados por un comando y una palabra clave, no sensibles a la diferencia entre mayusculas y minusculas, posiblemente son seguidos por uno o mas argumentos. Todos los mensajes son terminados por un \r\n. Las palabras claves y los argumentos son caracteres ASCII imprimibles, son separados entre si por un espacio. Los comandos son de entre 3 y 6 caracteres de largo. Cada argumento puede tener hasta 50 caracteres de largo. Una linea puede tener hasta 128 caracteres contando el fin de linea.        
 
 
-           Las respuestas de RCP consisten en una palabra clave y posiblemente seguida por más información. Todas las respuestas son terminadas por un \r\n. Se cuentan con dos estados de respuestas: positiva("+OK") negativa("-ERR"). El servidor debe responder los estados en mayúsculass.
+           Las respuestas de RCP consisten en una palabra clave y posiblemente seguida por más informacion. Todas las respuestas son terminadas por un \r\n. Se cuentan con dos estados de respuestas: positiva("+OK") negativa("-ERR"). El servidor debe responder los estados en mayusculass.
 
 
-           Las respuestas de algunos comandos son multi-línea. En estos casos, los cuales serán detalladas después, luego de enviar la primera línea seguida por su \r\n se envían las siguientes líneas con sus \r\n y se termina la respuesta enviando un "." seguido por su \r\n.
+           Las respuestas de algunos comandos son multi-línea. En estos casos, los cuales serán detalladas despues, luego de enviar la primera línea seguida por su \r\n se envían las siguientes líneas con sus \r\n y se termina la respuesta enviando un "." seguido por su \r\n.
 
 
-           La coneccion RCP progresa por distintos estados durante su tiempo de vida. Una vez que se establece la coneccion, la sesion entra en el estado de AUTORIZACIÓN. En este estado el usuario debe autenticarse ante el servidor. Si es exitoso, la sesión pasa al estado de TRANSACCIÓN. En este estado el cliente le pide acciones al servidor RCP. Cuando el cliente usa el comando QUIT, el servidor se despide y se termina la cierra la coneccion entre el cliente y el servidor.
+           La coneccion RCP progresa por distintos estados durante su tiempo de vida. Una vez que se establece la coneccion, la sesion entra en el estado de AUTORIZACION. En este estado el usuario debe autenticarse ante el servidor. Si es exitoso, la sesión pasa al estado de TRANSACCIÓN. En este estado el cliente le pide acciones al servidor RCP. Cuando el cliente usa el comando QUIT, el servidor se despide y se termina la cierra la coneccion entre el cliente y el servidor.
 
 
-           El servidor DEBE responder a un comando irrecconocido, no implementado, o sintácticamente inválido con un estado negativo ("-ERR") y con un número de error y opcionalmente  un mensaje. El servidor debe responder a un comando no perteneciente a el estado en el que se encuentra la sesión con un estado negativo ("-ERR") y posiblemente con un número de error y un mensaje. El servidor DEBE responder a un comando con una palabra clave inválida con una respuesta negativa y posiblemente seguida por un mensaje de error.
+           El servidor DEBE responder a un comando irrecconocido, no implementado, o sintácticamente inválido con un estado negativo ("-ERR") y con un numero de error y opcionalmente  un mensaje. El servidor debe responder a un comando no perteneciente a el estado en el que se encuentra la sesión con un estado negativo ("-ERR") y posiblemente con un numero de error y un mensaje. El servidor DEBE responder a un comando con una palabra clave invalida con una respuesta negativa y posiblemente seguida por un mensaje de error.
 
 
 2. Estado de AUTORIZACION
@@ -45,7 +45,7 @@ Una vez que la coneccion TCP se abre por parte del el cliente RCP, el servidor R
 
            En este momento el servidor RCP entra en el estado de AUTORIZACION. El cliente ahora DEBE autenticarse ante el servidor RCP. Hay una única forma de autenticarse que es mediante el comando PASS, el cual sera descripto luego.
         
-           Una vez que el servidor RCP determinó que el usuario tiene los privilegios de acceso para el servidor, esté entra en el estado de TRANSACCIÓN. Si la autenticación no es exitosa, el servidor responde con un estado negativo y el usuario puede intentar la autenticación otra vez, o puede cerrar la coneccion mediante el uso del comando QUIT.
+           Una vez que el servidor RCP determinó que el usuario tiene los privilegios de acceso para el servidor, esté entra en el estado de TRANSACCION. Si la autenticacion no es exitosa, el servidor responde con un estado negativo y el usuario puede intentar la autenticación otra vez, o puede cerrar la coneccion mediante el uso del comando QUIT.
 
 
            A continuación se puede encontrar un ejemplo de uso del comando QUIT usado en el estado de AUTORIZACION.
@@ -77,7 +77,7 @@ Una vez que la coneccion TCP se abre por parte del el cliente RCP, el servidor R
 3. Estado de TRANSACCION
 
 
-           Una vez que el cliente se identificó satisfactoriamente ante el servidor RCP, la sesión se encuentra entonces en el estado de TRANSACCION. Después de cada comando, el servidor RCP emite una respuesta correspondiente al comando. Eventualmente el cliente usa el comando QUIT, que          indica el cierre de coneccion entre el cliente y el servidor.
+           Una vez que el cliente se identificó satisfactoriamente ante el servidor RCP, la sesion se encuentra entonces en el estado de TRANSACCION. Despues de cada comando, el servidor RCP emite una respuesta correspondiente al comando. Eventualmente el cliente usa el comando QUIT, que          indica el cierre de coneccion entre el cliente y el servidor.
 
 
 Estos son los comandos RCP que son válidos en el estado de TRANSACCION:
@@ -97,7 +97,7 @@ Estos son los comandos RCP que son válidos en el estado de TRANSACCION:
 
 
         BUFFER_SIZE:
-             El comando debe recibir un número entero mayor a 0 y menor a 65,535 que representa la cantidad de bytes en el buffer. 
+             El comando debe recibir un numero entero mayor a 0 y menor a 65,535 que representa la cantidad de bytes en el buffer. 
 
 
         DEFAULT:
@@ -109,7 +109,7 @@ Estos son los comandos RCP que son válidos en el estado de TRANSACCION:
         MPLX:   
                  El comando debe recibir un estado positivo ("ON") o un estado negativo ("OFF"). 
         PASS:
-             El comando debe recibir una contraseña con una longitud mayor a 0 y menor al largo máximo del argumento previamente mencionado. Debe estar compuesta por caracteres ASCII imprimibles sin espacios.
+             El comando debe recibir una contrasena con una longitud mayor a 0 y menor al largo máximo del argumento previamente mencionado. Debe estar compuesta por caracteres ASCII imprimibles sin espacios.
 
 
         TRANSF:
@@ -117,13 +117,13 @@ Estos son los comandos RCP que son válidos en el estado de TRANSACCION:
 
 
     Restricciones:
-        Solo se puede ejecutar durante el estado de TRANSACCIÓN.
+        Solo se puede ejecutar durante el estado de TRANSACCION.
 
 
     Discusion:
         Si la palabra clave no es reconocida por el servidor entonces se responderá con un estado negativo, con un codigo de error y posiblemente con un mensaje de error. Si los argumentos no son acordes a los permitidos por la palabra clave entonces el servidor responderá con un estado negativo, un codigo de error y opcionalmnete un mensaje de error.
         
-        Si el comando es correcto entonces se emitirá una respuesta en una sola línea. En el caso de que la palabra clave sea USER entonces si                 el mensaje es exitoso se agregara a la lista el par ordenado conformado por los dos argumentos requeridos (nombre de usuario y                 hostname del servidor POP3). La palabra clave BUFFER_SIZE alterara el tamaño de todos los buffers al dado en el argumento. En el caso                 de la palabra clave DEFAULT modificara el hostname del servidor POP3 predeterminado que se le asignan a todos los usuarios. En el caso                 de la palabra clave L33T se activara o desactivara las conversiones de texto dependiendo del argumento del mensaje (“ON” lo activara y “OFF” lo desactivara). En el caso de la                 palabra clave MPLX se activara o desactivar el multiplexado de cuentas dependiendo del argumento del mensaje (“ON” lo activara y “OFF” lo desactivara). En el caso de la palabra                 clave PASS se modificara la contraseña del servidor RCP por la del argumento del mensaje. En el caso de la palabra clave TRANSF se                 agregara o modificara la transformación pasada en los argumentos a la lista de transformaciones. 
+        Si el comando es correcto entonces se emitirá una respuesta en una sola línea. En el caso de que la palabra clave sea USER entonces si                 el mensaje es exitoso se agregara a la lista el par ordenado conformado por los dos argumentos requeridos (nombre de usuario y                 hostname del servidor POP3). La palabra clave BUFFER_SIZE alterara el tamano de todos los buffers al dado en el argumento. En el caso                 de la palabra clave DEFAULT modificara el hostname del servidor POP3 predeterminado que se le asignan a todos los usuarios. En el caso                 de la palabra clave L33T se activara o desactivara las conversiones de texto dependiendo del argumento del mensaje (“ON” lo activara y “OFF” lo desactivara). En el caso de la                 palabra clave MPLX se activara o desactivar el multiplexado de cuentas dependiendo del argumento del mensaje (“ON” lo activara y “OFF” lo desactivara). En el caso de la palabra                 clave PASS se modificara la contrasena del servidor RCP por la del argumento del mensaje. En el caso de la palabra clave TRANSF se                 agregara o modificara la transformación pasada en los argumentos a la lista de transformaciones. 
 
 
     Posible Respuestas:
@@ -169,7 +169,7 @@ Estos son los comandos RCP que son válidos en el estado de TRANSACCION:
 
 
     Discusion:
-        La respuesta exitosa del comando es en este caso multi linea. La primer linea contiene una respuesta positiva seguida por un \r\n. En                 la segunda linea se encuentra la informacion pedida por el usuario seguido por un \r\n. La respuesta es terminada con una linea con                 un .(punto) seguido por un \r\n. En el caso de la palabra clave BUFFER_SIZE, el servidor respondera con el tamaño de los buffers                 en ese momento. En el caso de la palabra clave USER, el servidor respondera el hostname del servidor POP3 asociado al usuario pasado por                 argumento. Si no tiene asociado ningun hostname, se retornara un error. En el caso de la palabra clave DEFAULT, el servidor RCP responderael hostname del servidor POP3 predeterminado. En el caso                 de la palabra clave TRANSFS, el servidor RCP nos retorna una lista con todas las tranformaciones de texto que se encuentran en ese         momento. TRANSF el servidor respondera la transforamcion que corresponde al caracter recibido como argumento. Si este no existe, entonces se retorna error.  En el caso                 de la palabra clave L33T, el servidor RCP nos retorna el estado de las tranformaciones de texto. En el caso de la palabra clave MPLX,                 el servidor RCP nos retorna el estado de la multiplexacion de las cuentas de usuario.         En el caso de la palabra clave BYTES, el servidor retornara la cantidad de bytes transferidos. En el caso de la palabra clave ACCESS_COUNT, el servidor retornara la cantidad de accesos. En el caso de la palabra STATS, el servidor retornara todas las estadisticas (ACCESS_COUNT y BYTES), una por linea. Al comienzo de cada linea ira la palabra clave a la cual corresponde el valor.
+        La respuesta exitosa del comando es en este caso multi linea. La primer linea contiene una respuesta positiva seguida por un \r\n. En                 la segunda linea se encuentra la informacion pedida por el usuario seguido por un \r\n. La respuesta es terminada con una linea con                 un .(punto) seguido por un \r\n. En el caso de la palabra clave BUFFER_SIZE, el servidor respondera con el tamano de los buffers                 en ese momento. En el caso de la palabra clave USER, el servidor respondera el hostname del servidor POP3 asociado al usuario pasado por                 argumento. Si no tiene asociado ningun hostname, se retornara un error. En el caso de la palabra clave DEFAULT, el servidor RCP responderael hostname del servidor POP3 predeterminado. En el caso                 de la palabra clave TRANSFS, el servidor RCP nos retorna una lista con todas las tranformaciones de texto que se encuentran en ese         momento. TRANSF el servidor respondera la transforamcion que corresponde al caracter recibido como argumento. Si este no existe, entonces se retorna error.  En el caso                 de la palabra clave L33T, el servidor RCP nos retorna el estado de las tranformaciones de texto. En el caso de la palabra clave MPLX,                 el servidor RCP nos retorna el estado de la multiplexacion de las cuentas de usuario.         En el caso de la palabra clave BYTES, el servidor retornara la cantidad de bytes transferidos. En el caso de la palabra clave ACCESS_COUNT, el servidor retornara la cantidad de accesos. En el caso de la palabra STATS, el servidor retornara todas las estadisticas (ACCESS_COUNT y BYTES), una por linea. Al comienzo de cada linea ira la palabra clave a la cual corresponde el valor.
 
 
         Si la palabra clave no es reconocida por el servidor entonces se respondera con un estado negativo y posublemente con un mensaje de                  error. Si se envia el comando con argumentos, exeptuando el caso de la palabras clave USER y TRANSF , entonces el servidor respondera con una                 respuesta negativa.
