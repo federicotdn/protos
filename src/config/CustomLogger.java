@@ -60,11 +60,14 @@ public class CustomLogger {
 
 	public void logCommand(POP3Line com, SocketAddress address) {
 		StringBuffer sb = new StringBuffer();
-		for (String s : com.getParams()) {
-			sb.append(s + " ");
+		if (com.getParams() != null){
+			for (String s : com.getParams()) {
+				sb.append(s + " ");
+			}
 		}
+		
 		logger.info("Client: " + address + " executed command '"
 				+ com.getCommand()
-				+ (sb.length() != 0 ? "' with parameters " : "") + sb + ".");
+				+ (sb.length() != 0 ? "' with parameters '" : "") + sb + "'.");
 	}
 }

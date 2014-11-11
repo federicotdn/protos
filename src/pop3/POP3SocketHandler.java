@@ -106,11 +106,10 @@ public class POP3SocketHandler implements TCPProtocol {
 		if (readBytes == -1) {
 
 			if (state.hasServerFlag(StatusEnum.CLOSING)) {
-
+				logger.logDisconnection("Server", serverChannel.getRemoteAddress());
 				key.cancel();
 				serverChannel.close();
 				serverState.removeSocketHandler(serverChannel);
-				logger.logDisconnection("Server", serverChannel.getRemoteAddress());
 				return;
 
 			} else {
@@ -480,10 +479,10 @@ public class POP3SocketHandler implements TCPProtocol {
 		state.enableClientFlag(StatusEnum.WRITE);
 		state.disableServerFlag(StatusEnum.GREETING);
 
+		logger.logDisconnection("Server", serverChannel.getRemoteAddress());
 		state.resetServerSettings();
 		key.cancel();
 		serverChannel.close();
-		logger.logDisconnection("Server", serverChannel.getRemoteAddress());
 	}
 
 	private void handleClientRead(SelectionKey key, POP3SocketState state)
@@ -565,10 +564,9 @@ public class POP3SocketHandler implements TCPProtocol {
 
 				// Habia una coneccion a otro servidor
 				if (!oldServerHostname.equals(server)) {
-
+					logger.logDisconnection("Server", oldServerChannel.getRemoteAddress());
 					oldServerChannel.keyFor(key.selector()).cancel();
 					oldServerChannel.close();
-					logger.logDisconnection("Server", oldServerChannel.getRemoteAddress());
 					serverState.removeSocketHandler(oldServerChannel);
 					state.resetServerSettings();
 
@@ -819,9 +817,9 @@ public class POP3SocketHandler implements TCPProtocol {
 				&& (!auxBuf.hasRemaining() && !writeBuf.hasRemaining())
 				|| writtenBytes == -1) {
 
+			logger.logDisconnection("Client", clientChannel.getRemoteAddress());
 			key.cancel();
 			clientChannel.close();
-			logger.logDisconnection("Client", clientChannel.getRemoteAddress());
 			serverState.removeSocketHandler(clientChannel);
 
 			return;
@@ -978,7 +976,7 @@ public class POP3SocketHandler implements TCPProtocol {
 			throws IOException {
 		
 		SocketChannel pop3ServerChannel = state.getServerChannel();
-		logger.getLogger().info("Server " + serverState.getUserPOP3Server(state.getLastUSERCommand().getParams()[0]) + " connection failed.");
+		logger.getLogger().info("Server " + state.getPop3ServerHostname() + " connection failed.");
 		
 		state.resetServerSettings();
 		state.setLastUSERCommand(null);
