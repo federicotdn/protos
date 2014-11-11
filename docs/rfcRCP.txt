@@ -1,0 +1,322 @@
+﻿Remote Control Protocol - Version 1
+
+
+Este documento especifica el funcionamiento de protocolo encargado para manejo de la configuración y el monitoreo de un servidor proxy de POP3. 
+
+
+
+
+Tabla de contenidos
+Operaciones básicas………………………...………………………………………………..1
+Estado de AUTORIZACION…………………..………...……………………………...…....2
+Estado de TRANSACCION…………………………………………………………………..3
+Errores…………………………………………………………………………………………..8
+
+
+
+
+1. Operaciones básicas
+
+
+           Inicialmente el servidor comienza escuchando en puerto TCP 4546. Cuando un cliente quiere utilizar el servicio debe establecer una         coneccion TCP con el servidor. Cuando se establece la conexión el servidor responde con un saludo, indicado por el "+OK" y un mensaje opcional. Luego el servidor intercambian con el cliente comandos y respuestas hasta que se cierra la coneccion.
+
+
+           Los mensajes de RCP están formados por un comando y una palabra clave, no sensibles a la diferencia entre mayusculas y minusculas, posiblemente son seguidos por uno o más argumentos. Todos los mensajes son terminados por un \r\n. Las palabras claves y los argumentos son caracteres ASCII imprimibles, son separados entre sí por un espacio. Los comandos son de entre 3 y 6 caracteres de largo. Cada argumento puede tener hasta 50 caracteres de largo. Una linea puede tener hasta 128 caracteres contando el fin de linea.        
+
+
+           Las respuestas de RCP consisten en una palabra clave y posiblemente seguida por más información. Todas las respuestas son terminadas por un \r\n. Se cuentan con dos estados de respuestas: positiva("+OK") negativa("-ERR"). El servidor debe responder los estados en mayúsculass.
+
+
+           Las respuestas de algunos comandos son multi-línea. En estos casos, los cuales serán detalladas después, luego de enviar la primera línea seguida por su \r\n se envían las siguientes líneas con sus \r\n y se termina la respuesta enviando un "." seguido por su \r\n.
+
+
+           La coneccion RCP progresa por distintos estados durante su tiempo de vida. Una vez que se establece la coneccion, la sesion entra en el estado de AUTORIZACIÓN. En este estado el usuario debe autenticarse ante el servidor. Si es exitoso, la sesión pasa al estado de TRANSACCIÓN. En este estado el cliente le pide acciones al servidor RCP. Cuando el cliente usa el comando QUIT, el servidor se despide y se termina la cierra la coneccion entre el cliente y el servidor.
+
+
+           El servidor DEBE responder a un comando irrecconocido, no implementado, o sintácticamente inválido con un estado negativo ("-ERR") y con un número de error y opcionalmente  un mensaje. El servidor debe responder a un comando no perteneciente a el estado en el que se encuentra la sesión con un estado negativo ("-ERR") y posiblemente con un número de error y un mensaje. El servidor DEBE responder a un comando con una palabra clave inválida con una respuesta negativa y posiblemente seguida por un mensaje de error.
+
+
+2. Estado de AUTORIZACION
+        El unico comando valido en este estado es PASS.
+Una vez que la coneccion TCP se abre por parte del el cliente RCP, el servidor RCP envía un saludo de bienvenida de una línea. Puede tener cualquier tipo de respuesta positiva. un ejemplo de esto es:
+        
+        S: +OK Servidor RCP listo
+
+
+           En este momento el servidor RCP entra en el estado de AUTORIZACION. El cliente ahora DEBE autenticarse ante el servidor RCP. Hay una única forma de autenticarse que es mediante el comando PASS, el cual sera descripto luego.
+        
+           Una vez que el servidor RCP determinó que el usuario tiene los privilegios de acceso para el servidor, esté entra en el estado de TRANSACCIÓN. Si la autenticación no es exitosa, el servidor responde con un estado negativo y el usuario puede intentar la autenticación otra vez, o puede cerrar la coneccion mediante el uso del comando QUIT.
+
+
+           A continuación se puede encontrar un ejemplo de uso del comando QUIT usado en el estado de AUTORIZACION.
+
+
+   QUIT
+
+
+        Argumentos: ninguno
+
+
+         Restricciones: ninguno
+
+
+        Posibles Respuestas:
+                +OK
+        
+        Ejemplo:
+                C: QUIT\r\n
+                S: +OK servidor RCP desconectandose\r\n
+
+
+
+
+
+
+
+
+3. Estado de TRANSACCION
+
+
+           Una vez que el cliente se identificó satisfactoriamente ante el servidor RCP, la sesión se encuentra entonces en el estado de TRANSACCION. Después de cada comando, el servidor RCP emite una respuesta correspondiente al comando. Eventualmente el cliente usa el comando QUIT, que          indica el cierre de coneccion entre el cliente y el servidor.
+
+
+Estos son los comandos RCP que son válidos en el estado de TRANSACCION:
+
+
+   SET palabra_clave
+   
+    Palabras Claves:
+        USER, BUFFER_SIZE, DEFAULT, TRANSF, PASS, L33T, MPLX, PASS
+
+
+    Argumentos:
+        Los argumentos dependen de las palabras claves, los cuales seran descriptos a continuacion.
+        
+        USER:
+             El comando debe recibir un nombre de usuario y el hostname de un servidor POP3 de mail.
+
+
+        BUFFER_SIZE:
+             El comando debe recibir un número entero mayor a 0 y menor a 65,535 que representa la cantidad de bytes en el buffer. 
+
+
+        DEFAULT:
+             El comando debe recibir un hostname de un servidor POP3 de mail, que se asignará a cualquier usuario que no tenga uno                      especificado.
+
+
+        L33T:
+             El comando debe recibir un estado positivo ("ON") o un estado negativo ("OFF"). 
+        MPLX:   
+                 El comando debe recibir un estado positivo ("ON") o un estado negativo ("OFF"). 
+        PASS:
+             El comando debe recibir una contraseña con una longitud mayor a 0 y menor al largo máximo del argumento previamente mencionado. Debe estar compuesta por caracteres ASCII imprimibles sin espacios.
+
+
+        TRANSF:
+             El comando debe recibir un caracter ASCII imprimible seguido por otro caracter ASCII imprimible.
+
+
+    Restricciones:
+        Solo se puede ejecutar durante el estado de TRANSACCIÓN.
+
+
+    Discusion:
+        Si la palabra clave no es reconocida por el servidor entonces se responderá con un estado negativo, con un codigo de error y posiblemente con un mensaje de error. Si los argumentos no son acordes a los permitidos por la palabra clave entonces el servidor responderá con un estado negativo, un codigo de error y opcionalmnete un mensaje de error.
+        
+        Si el comando es correcto entonces se emitirá una respuesta en una sola línea. En el caso de que la palabra clave sea USER entonces si                 el mensaje es exitoso se agregara a la lista el par ordenado conformado por los dos argumentos requeridos (nombre de usuario y                 hostname del servidor POP3). La palabra clave BUFFER_SIZE alterara el tamaño de todos los buffers al dado en el argumento. En el caso                 de la palabra clave DEFAULT modificara el hostname del servidor POP3 predeterminado que se le asignan a todos los usuarios. En el caso                 de la palabra clave L33T se activara o desactivara las conversiones de texto dependiendo del argumento del mensaje (“ON” lo activara y “OFF” lo desactivara). En el caso de la                 palabra clave MPLX se activara o desactivar el multiplexado de cuentas dependiendo del argumento del mensaje (“ON” lo activara y “OFF” lo desactivara). En el caso de la palabra                 clave PASS se modificara la contraseña del servidor RCP por la del argumento del mensaje. En el caso de la palabra clave TRANSF se                 agregara o modificara la transformación pasada en los argumentos a la lista de transformaciones. 
+
+
+    Posible Respuestas:
+        +OK\r\n
+        -ERR 5\r\n
+
+
+    Ejemplos:
+        C: SET USER mike@aol.com.ar pop3.aol.com\r\n
+        S: +OK\r\n
+
+
+        C: SET default pop3.aol.com\r\n
+        S: +OK\r\n
+
+
+        C: SET paSS\r\n
+        S: -ERR 5 argumento inválido\r\n
+
+
+           
+
+
+   GET palabra_clave
+
+
+    Palabras Claves:
+        USER, BUFFER_SIZE, DEFAULT, TRANSF, L33T, MPLX, TRANSFS, BYTES, ACCESS_COUNT, STATS
+    
+    Argumentos:
+        Los argumentos dependen de las palabras claves, los cuales seran descriptos a continuacion.
+        
+        USER:
+             El comando debe recibir un nombre de usuario  con una longiutd menor al tamano maximo de un argumento. 
+
+
+        TRANSF:
+             El comando debe recibir un unico caracter.
+
+
+    Restricciones:
+        Solo se puede utilizar en el estado de TRANSACCIÓN
+
+
+    Discusion:
+        La respuesta exitosa del comando es en este caso multi linea. La primer linea contiene una respuesta positiva seguida por un \r\n. En                 la segunda linea se encuentra la informacion pedida por el usuario seguido por un \r\n. La respuesta es terminada con una linea con                 un .(punto) seguido por un \r\n. En el caso de la palabra clave BUFFER_SIZE, el servidor respondera con el tamaño de los buffers                 en ese momento. En el caso de la palabra clave USER, el servidor respondera el hostname del servidor POP3 asociado al usuario pasado por                 argumento. Si no tiene asociado ningun hostname, se retornara un error. En el caso de la palabra clave DEFAULT, el servidor RCP responderael hostname del servidor POP3 predeterminado. En el caso                 de la palabra clave TRANSFS, el servidor RCP nos retorna una lista con todas las tranformaciones de texto que se encuentran en ese         momento. TRANSF el servidor respondera la transforamcion que corresponde al caracter recibido como argumento. Si este no existe, entonces se retorna error.  En el caso                 de la palabra clave L33T, el servidor RCP nos retorna el estado de las tranformaciones de texto. En el caso de la palabra clave MPLX,                 el servidor RCP nos retorna el estado de la multiplexacion de las cuentas de usuario.         En el caso de la palabra clave BYTES, el servidor retornara la cantidad de bytes transferidos. En el caso de la palabra clave ACCESS_COUNT, el servidor retornara la cantidad de accesos. En el caso de la palabra STATS, el servidor retornara todas las estadisticas (ACCESS_COUNT y BYTES), una por linea. Al comienzo de cada linea ira la palabra clave a la cual corresponde el valor.
+
+
+        Si la palabra clave no es reconocida por el servidor entonces se respondera con un estado negativo y posublemente con un mensaje de                  error. Si se envia el comando con argumentos, exeptuando el caso de la palabras clave USER y TRANSF , entonces el servidor respondera con una                 respuesta negativa.
+
+
+    Posibles Respuestas:
+        +OK\r\n
+        -ERR\r\n
+
+
+    Ejemplos:
+        C: GET BUFFER_SIZE\r\n
+        S: +OK\r\n
+        S: BUFFER_SIZE 2058\r\n
+        S: .\r\n
+
+
+        C: GET MPLX\r\n
+        S: +OK\r\n
+        S: MPLX true
+        S: .\r\n
+
+
+        C: GET default hola
+        S: -ERR mensaje invalido\r\n
+
+
+        C: GET STATS
+        S: +OK\r\n
+        S: BYTES 45\r\n
+        S: ACCESS_COUNT 3\r\n
+        S:.\r\n
+
+
+   DELETE
+
+
+    Palabras Claves:
+        USER, TRANSF, USERS, TRANSFS, BYTES, ACCESS_COUNT, STATS
+
+
+    Argumentos:
+        Los argumentos dependen de las palabras claves, los cuales seran descriptos a continuacion.
+
+
+        USER:
+             El comando debe recibir el nombre de usuario, con longitud mayor a 0 y menor a la longitud maxima del argumento definida                      previamente.
+
+
+        USERS:
+             No recibe argumentos.
+        
+TRANSF:
+             El comando debe recibir un caracter ASCII imprimible.
+
+
+TRANSFS:
+            No recibe argumentos.
+
+
+BYTES:
+             No recibe argumentos.
+
+
+
+
+ACCESS_COUNT:
+             No recibe argumentos.
+STATS:
+             No recibe argumentos.
+
+
+
+
+
+
+
+
+             
+    Restricciones:
+        Solo se puede utilizar en el estado de TRANSACCION.
+
+
+    Discusion:
+        La respuesta exitosa del comando se indica con una respuesta positiva en una sola linea seguida por un \r\n. En el caso de la palabra                 clave USER se removera el hostname del servidor POP3 asociado al usuario pasado por argumento en el servidor RCP. En el caso de la                 palabra clave TRANSF se removera la transformacion del caracter dado por parametro del servidor RCP. En el caso de la palabra clave USERS se removeran todos los mapeos de nombres de usuario, hostname de servidor POP3 del servidor RCP. En el caso de la palabra clave TRANSFS, se removeran todas las trasnformaciones de caracteres. En el caso de la palabra clave BYTES, se pondra la estadistica en 0. En el caso de la palabra clave ACCESS_COUNT se pondra en 0 la estadistica. En el caso de la palabra clave STATS, se pondran en 0 todas las estadisticas.
+
+
+        Si la palabra clave no es reconocida por el servidor entonces se respondera con un estado negativo y posublemente con un mensaje de                  error. Si se envia el mensaje con argumentos invalidos entonces tambien se debera enviar una respuesta de error.       
+   
+   Posibles Respuestas:
+        +OK\r\n
+        -ERR\r\n
+   
+   Ejemplos:
+        C: DELTE user mike@aol.com\r\n
+        S: +OK\r\n
+
+
+        C: DELETE USER\r\n
+        S: -ERR\r\n
+
+
+        C: DELETE TRANSF a\r\n
+        S: +OK\r\n
+
+
+
+
+4. Errores
+En esta seccion se detallaran los codigos de error soportados.
+
+
+Codigos:
+
+
+                1: Comando invalido.
+                2: Palabra clave invalida.
+                3: No autorizado.
+                4: Error de sintaxis.
+                5: Parametro invalido.
+                6: Contrasena invalida.
+                7: Usuario invalido.
+                8: Caracter invalido.
+                9: Linea muy larga.
+                10: Error interno.
+         
+
+
+1. Comando invalido:
+                El comando ingresado no existe.        
+
+
+        2. Palabra clave invalida:
+                La palabra clave no existe o no pertenece al estado en el que se encuentra.
+        3. No autorizado:
+                Se quiere acceder a comandos del estado transaccion en el estado autorizacion o viceversa.
+        4. Error de sintaxis:
+                Cualquier error que viole la sintaxis.
+        5. Paramtero invalido:
+                El paramtro no cumple con las condiciones minimas. Esto puede ser por longitud, por valor, por tipo, entre otros.
+        6. Contrasena invalida:
+                La contrasena introducida no es valida.
+        7. Usuario invalido:
+El usuario del que se requiere el hostname no existe.
+        8. Caracter invalido:
+                El caracter para el cual se quiere la transforamcion no existe.
+        9: Linea muy larga:
+                La linae se excede del tamano maximo.
+        10: Error interno:
+                Error interno del servidor.
