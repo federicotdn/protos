@@ -305,6 +305,7 @@ public class POP3SocketHandler implements TCPProtocol {
 			subject.appendOriginal(ch);
 			break;
 		case ENC_END_N:
+			subject.appendOriginal(ch);
 			if (ch == '\n' && subject.lenght() < POP3_MAX_ENCODED_LEN - 1) {
 				String sub = transformAndEncodeLine(subject);
 				if (sub == null) {
@@ -314,15 +315,13 @@ public class POP3SocketHandler implements TCPProtocol {
 					l33tState = L33tStateEnum.WS;
 				}
 				clientAuxBuf.put(sub.getBytes());
-				subject.reset();
-				
+				subject.reset();	
 			} else {
 				l33tState = L33tStateEnum.SKIP_SUBJECT;
-				subject.appendOriginal(ch);
 			}
 			break;
 		case ASCII_TRANSOFRM:
-			if (subject.getOriginal().length() != 0) {
+			if (!subject.getOriginal().isEmpty()) {
 				clientAuxBuf.put(subject.getOriginal().getBytes());
 				subject.reset();
 			}
@@ -433,7 +432,7 @@ public class POP3SocketHandler implements TCPProtocol {
 				String transformed = transformString(decoded);
 				return subject.toEncodedString(codec.encodeToString(transformed
 						.getBytes()));
-			} catch (UnsupportedEncodingException e) {
+			} catch (Exception e) {
 				return null;
 			}
 		} else {
