@@ -102,11 +102,12 @@ public class POP3SocketHandler implements TCPProtocol {
 			copyServerToClient(state);
 
 		}
-
+		
 		if (readBytes == -1) {
 
-			if (state.hasServerFlag(StatusEnum.CLOSING)) {
-
+			if (state.hasServerFlag(StatusEnum.CLOSING) && !serverInBuf.hasRemaining()) {
+			    
+			    	state.disableServerFlag(StatusEnum.CLOSING);
 				key.cancel();
 				serverChannel.close();
 				serverState.removeSocketHandler(serverChannel);
@@ -814,14 +815,19 @@ public class POP3SocketHandler implements TCPProtocol {
 			state.updateClientSubscription(key);
 			return;
 		}
+		
+		ByteBuffer readServerBuf = state.readBufferFor(state.getServerChannel());
+		if (readServerBuf != null && readServerBuf.hasRemaining() && state.hasServerFlag(StatusEnum.READ)) {
+		    copyServerToClient(state);
+		    state.updateClientSubscription(key);
+		    state.updateServerSubscription(key);
+		    return;
+		}
 
-		if (state.hasClientFlag(StatusEnum.CLOSING)
-				&& (!auxBuf.hasRemaining() && !writeBuf.hasRemaining())
-				|| writtenBytes == -1) {
-
+		if (state.hasClientFlag(StatusEnum.CLOSING)) {
+		    if (!state.isServerConnected() || !state.hasServerFlag(StatusEnum.CLOSING))
 			key.cancel();
 			clientChannel.close();
-			logger.logDisconnection("Client", clientChannel.getRemoteAddress());
 			serverState.removeSocketHandler(clientChannel);
 
 			return;
