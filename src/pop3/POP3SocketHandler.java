@@ -102,7 +102,7 @@ public class POP3SocketHandler implements TCPProtocol {
 			copyServerToClient(state);
 
 		}
-		
+
 		if (readBytes == -1) {
 
 			if (state.hasServerFlag(StatusEnum.CLOSING)) {
@@ -360,6 +360,8 @@ public class POP3SocketHandler implements TCPProtocol {
 			clientAuxBuf.put((byte) ch);
 			if (ch == '\n') {
 				l33tState = L33tStateEnum.SE_DOT;
+			} else if (ch == '\r') {
+				l33tState = L33tStateEnum.SE_END_N;
 			} else {
 				l33tState = L33tStateEnum.SUBJECT_ENDED;
 			}
@@ -368,9 +370,12 @@ public class POP3SocketHandler implements TCPProtocol {
 			clientAuxBuf.put((byte) ch);
 			if (ch == '.') {
 				l33tState = L33tStateEnum.SE_END_R;
+			} else if (ch == '\r'){
+				l33tState = L33tStateEnum.SE_END_N;
 			} else {
 				l33tState = L33tStateEnum.SUBJECT_ENDED;
 			}
+			
 			break;
 		case SE_END_R:
 			clientAuxBuf.put((byte) ch);
@@ -385,6 +390,9 @@ public class POP3SocketHandler implements TCPProtocol {
 			if (ch == '\n') {
 				state.setCurrentSubject(null);
 				state.resetCharsMatched();
+				l33tState = L33tStateEnum.START;
+			} else if(ch == '\r') {
+				l33tState = L33tStateEnum.SE_END_N;
 			} else {
 				l33tState = L33tStateEnum.SUBJECT_ENDED;
 			}
@@ -519,7 +527,8 @@ public class POP3SocketHandler implements TCPProtocol {
 
 		// case: INVALID COMMAND
 		if (com.getCommand() == null) {
-			logger.logInvalidCommand(com.getCommandString(), state.getClientChannel());
+			logger.logInvalidCommand(com.getCommandString(),
+					state.getClientChannel());
 			if (state.isServerConnected()) {
 
 				appendToServer(state, com.getCommandString());
@@ -807,18 +816,20 @@ public class POP3SocketHandler implements TCPProtocol {
 		int writtenBytes = clientChannel.write(writeBuf);
 		logger.logWrittenBytes(writtenBytes, clientChannel, "client");
 		serverState.getStats().addBytes(writtenBytes);
-		
-		ByteBuffer readServerBuf = state.readBufferFor(state.getServerChannel());
-		if (state.isServerConnected() && readServerBuf.hasRemaining() && state.hasServerFlag(StatusEnum.READ)) {
-		    copyServerToClient(state);
-		    state.updateClientSubscription(key);
-		    state.updateServerSubscription(key);
-		    return;
+
+		ByteBuffer readServerBuf = state
+				.readBufferFor(state.getServerChannel());
+		if (state.isServerConnected() && readServerBuf.hasRemaining()
+				&& state.hasServerFlag(StatusEnum.READ)) {
+			copyServerToClient(state);
+			state.updateClientSubscription(key);
+			state.updateServerSubscription(key);
+			return;
 		}
-		
+
 		if (writeBuf.hasRemaining() || auxBuf.hasRemaining()) {
-		    state.updateClientSubscription(key);
-		    return;
+			state.updateClientSubscription(key);
+			return;
 		}
 
 		if (state.hasClientFlag(StatusEnum.CLOSING)
@@ -955,10 +966,10 @@ public class POP3SocketHandler implements TCPProtocol {
 
 				state.enableServerFlag(StatusEnum.GREETING);
 				state.updateServerSubscription(key);
-				
+
 				logger.logConnection("Server:", pop3ServerChannel);
 
-			} else {		
+			} else {
 				abortServerConnection(key, state);
 			}
 
@@ -979,10 +990,12 @@ public class POP3SocketHandler implements TCPProtocol {
 
 	private void abortServerConnection(SelectionKey key, POP3SocketState state)
 			throws IOException {
-		
+
 		SocketChannel pop3ServerChannel = state.getServerChannel();
-		logger.getLogger().info("Server " + state.getPop3ServerHostname() + " connection failed.");
-		
+		logger.getLogger().info(
+				"Server " + state.getPop3ServerHostname()
+						+ " connection failed.");
+
 		state.resetServerSettings();
 		state.setLastUSERCommand(null);
 		key.cancel();

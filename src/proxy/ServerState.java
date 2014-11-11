@@ -21,7 +21,7 @@ public class ServerState {
 
 	socketHandlers = new HashMap<SocketChannel, TCPProtocol>();
 	config = new ServerConfig();
-	stats = XMLManager.loadServerStatistics();
+	stats = XMLManager.getInstance().loadServerStatistics();
     }
 
     public TCPProtocol getSocketHandler(SelectionKey key) throws Exception {

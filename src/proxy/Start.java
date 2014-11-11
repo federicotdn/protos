@@ -1,11 +1,13 @@
 package proxy;
 
-import proxy.ProxyServer;
+import java.io.File;
+
+import config.CustomLogger;
 
 public class Start {
 
 	public static void main(String[] args) throws Exception {
-		System.out.println("Server started.");
+		CustomLogger.getInsance().getLogger().info("Server started.");
 
 		ProxyServer server = new ProxyServer();
 
@@ -17,7 +19,7 @@ public class Start {
 			throw e;
 		}
 
-		System.out.println("Server end.");
+		CustomLogger.getInsance().getLogger().info("Server ended.");
 
 	}
 

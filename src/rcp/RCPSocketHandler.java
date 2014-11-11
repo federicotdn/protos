@@ -65,7 +65,6 @@ public class RCPSocketHandler implements TCPProtocol {
 					handleCommand(key, state, com);
 
 				} catch (RCPException e) {
-					e.printStackTrace();
 					sendErrorMessage(state.getOutBuffer(), e.getErrorCode(),
 							e.getMessage());
 				}

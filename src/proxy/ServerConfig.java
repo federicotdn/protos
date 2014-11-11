@@ -18,12 +18,14 @@ public class ServerConfig {
 
 	private InetSocketAddress pop3Address;
 	private InetSocketAddress rcpAddress;
+	
+	private XMLManager xmlManager;
 
 	public ServerConfig() throws JAXBException {
-
-		users = XMLManager.loadUserMap();
-		l33tTransformations = XMLManager.loadTransformations();
-		params = XMLManager.loadParams();
+		xmlManager = XMLManager.getInstance();
+		users = xmlManager.loadUserMap();
+		l33tTransformations = xmlManager.loadTransformations();
+		params = xmlManager.loadParams();
 
 		pop3Address = new InetSocketAddress(params.getPop3Host(),
 				params.getPop3Port());
@@ -105,15 +107,15 @@ public class ServerConfig {
 	}
 	
 	public void saveParams() throws JAXBException {
-		XMLManager.saveParams(params);
+		xmlManager.saveParams(params);
 	}
 	
 	public void saveTransformations() throws JAXBException {
-		XMLManager.saveTransformations(l33tTransformations);
+		xmlManager.saveTransformations(l33tTransformations);
 	}
 	
 	public void saveUsers() throws JAXBException{
-		XMLManager.saveUsers(users);
+		xmlManager.saveUsers(users);
 	}
 	
 	public void setL33tEnabled(boolean enabled) {

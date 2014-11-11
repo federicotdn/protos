@@ -62,7 +62,7 @@ public class ServerStatistics {
 	}
 
 	public void save() throws JAXBException {
-		XMLManager.saveStats(this);
+		XMLManager.getInstance().saveStats(this);
 	}
 
 	public void validate() {
