@@ -1,5 +1,6 @@
 package proxy;
 
+import java.io.IOException;
 import java.nio.channels.SelectableChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
@@ -16,7 +17,7 @@ public class ServerState {
     private ServerConfig config;
     private ServerStatistics stats;
 
-    public ServerState() throws JAXBException {
+    public ServerState() throws JAXBException, IOException {
 
 	socketHandlers = new HashMap<SocketChannel, TCPProtocol>();
 	config = new ServerConfig();

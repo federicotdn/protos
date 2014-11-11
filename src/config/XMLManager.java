@@ -1,6 +1,7 @@
 package config;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Map;
 
 import javax.xml.bind.JAXBContext;
@@ -37,7 +38,12 @@ public class XMLManager {
 	    return transfMap.getTransformations();
 	}
 	
-	public static ServerStatistics loadServerStatistics() throws JAXBException{
+	public static ServerStatistics loadServerStatistics() throws JAXBException, IOException{
+		File f = new File("src/resources/stats.xml");
+		if (!f.exists()) {
+			ServerStatistics stats = new ServerStatistics();
+			saveStats(stats);
+		}
 		JAXBContext jaxbContext = JAXBContext.newInstance(ServerStatistics.class);
 	    Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
 	    ServerStatistics stats = (ServerStatistics) jaxbUnmarshaller.unmarshal( new File("src/resources/stats.xml") );

@@ -59,7 +59,7 @@ public class POP3SocketHandler implements TCPProtocol {
 
 		serverState.setSocketHandler(clientChannel, this);
 		serverState.getStats().increaseAccessCount();
-		logger.logConnection("Client:", clientChannel.getRemoteAddress());
+		logger.logConnection("Client:", clientChannel);
 	}
 
 	@Override
@@ -90,7 +90,7 @@ public class POP3SocketHandler implements TCPProtocol {
 
 		readBytes = serverChannel.read(serverInBuf);
 		serverState.getStats().addBytes(readBytes);
-		logger.logReadBytes(readBytes, serverChannel.getRemoteAddress(), "server");
+		logger.logReadBytes(readBytes, serverChannel, "server");
 		serverInBuf.flip();
 
 		if (state.hasServerFlag(StatusEnum.GREETING)) {
@@ -106,7 +106,7 @@ public class POP3SocketHandler implements TCPProtocol {
 		if (readBytes == -1) {
 
 			if (state.hasServerFlag(StatusEnum.CLOSING)) {
-				logger.logDisconnection("Server:", serverChannel.getRemoteAddress());
+				logger.logDisconnection("Server:", serverChannel);
 				key.cancel();
 				serverChannel.close();
 				serverState.removeSocketHandler(serverChannel);
@@ -479,7 +479,7 @@ public class POP3SocketHandler implements TCPProtocol {
 		state.enableClientFlag(StatusEnum.WRITE);
 		state.disableServerFlag(StatusEnum.GREETING);
 
-		logger.logDisconnection("Server:", serverChannel.getRemoteAddress());
+		logger.logDisconnection("Server:", serverChannel);
 		state.resetServerSettings();
 		key.cancel();
 		serverChannel.close();
@@ -519,7 +519,7 @@ public class POP3SocketHandler implements TCPProtocol {
 
 		// case: INVALID COMMAND
 		if (com.getCommand() == null) {
-			logger.logInvalidCommand(com.getCommandString(), state.getClientChannel().getRemoteAddress());
+			logger.logInvalidCommand(com.getCommandString(), state.getClientChannel());
 			if (state.isServerConnected()) {
 
 				appendToServer(state, com.getCommandString());
@@ -537,7 +537,7 @@ public class POP3SocketHandler implements TCPProtocol {
 			return;
 		}
 
-		logger.logCommand(com, state.getClientChannel().getRemoteAddress());
+		logger.logCommand(com, state.getClientChannel());
 		switch (com.getCommand()) {
 		case CAPA:
 
@@ -564,7 +564,7 @@ public class POP3SocketHandler implements TCPProtocol {
 
 				// Habia una coneccion a otro servidor
 				if (!oldServerHostname.equals(server)) {
-					logger.logDisconnection("Server:", oldServerChannel.getRemoteAddress());
+					logger.logDisconnection("Server:", oldServerChannel);
 					oldServerChannel.keyFor(key.selector()).cancel();
 					oldServerChannel.close();
 					serverState.removeSocketHandler(oldServerChannel);
@@ -762,7 +762,7 @@ public class POP3SocketHandler implements TCPProtocol {
 		prepareBuffer(buf);
 
 		readBytes = clientChannel.read(buf);
-		logger.logReadBytes(readBytes, clientChannel.getRemoteAddress(), "client");
+		logger.logReadBytes(readBytes, clientChannel, "client");
 		serverState.getStats().addBytes(readBytes);
 
 		if (readBytes == -1) {
@@ -805,7 +805,7 @@ public class POP3SocketHandler implements TCPProtocol {
 		}
 
 		int writtenBytes = clientChannel.write(writeBuf);
-		logger.logWrittenBytes(writtenBytes, clientChannel.getRemoteAddress(), "client");
+		logger.logWrittenBytes(writtenBytes, clientChannel, "client");
 		serverState.getStats().addBytes(writtenBytes);
 
 		if (writeBuf.hasRemaining() || auxBuf.hasRemaining()) {
@@ -825,7 +825,7 @@ public class POP3SocketHandler implements TCPProtocol {
 				&& (!auxBuf.hasRemaining() && !writeBuf.hasRemaining())
 				|| writtenBytes == -1) {
 
-			logger.logDisconnection("Client", clientChannel.getRemoteAddress());
+			logger.logDisconnection("Client:", clientChannel);
 			key.cancel();
 			clientChannel.close();
 			serverState.removeSocketHandler(clientChannel);
@@ -867,7 +867,7 @@ public class POP3SocketHandler implements TCPProtocol {
 		}
 
 		int writtenBytes = serverChannel.write(writeBuf);
-		logger.logWrittenBytes(writtenBytes, serverChannel.getRemoteAddress(), "server");
+		logger.logWrittenBytes(writtenBytes, serverChannel, "server");
 		serverState.getStats().addBytes(writtenBytes);
 
 		if ((!auxBuf.hasRemaining() && !writeBuf.hasRemaining())
@@ -956,7 +956,7 @@ public class POP3SocketHandler implements TCPProtocol {
 				state.enableServerFlag(StatusEnum.GREETING);
 				state.updateServerSubscription(key);
 				
-				logger.logConnection("Server", pop3ServerChannel.getRemoteAddress());
+				logger.logConnection("Server:", pop3ServerChannel);
 
 			} else {		
 				abortServerConnection(key, state);
