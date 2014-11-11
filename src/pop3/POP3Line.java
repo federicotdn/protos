@@ -49,4 +49,5 @@ public class POP3Line {
     public void setCommandString(String commandString) {
         this.commandString = commandString;
     }
+   
 }
