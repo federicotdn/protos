@@ -144,42 +144,13 @@ public class POP3SocketHandler implements TCPProtocol {
 		}
 	}
 
-	private void copyServerL33t(POP3SocketState state) throws IOException { // copiar
-																			// contenido
-																			// del
-		// server al
-		// cliente,
-		// posiblemente
-		// transformado
+	private void copyServerL33t(POP3SocketState state) throws IOException {
 
-		ByteBuffer clientAuxBuf = state.auxBufferFor(state.getClientChannel()); // escribir
-																				// a
-																				// este
-		ByteBuffer serverBuf = state.readBufferFor(state.getServerChannel()); // leer
-																				// desde
-																				// este
-																				// (1)
-		// se arma el
-		// subject
-
-		char ch = (char) serverBuf.get(); // ya lei el unico que me asegura que
-											// puedo leer
+		ByteBuffer clientAuxBuf = state.auxBufferFor(state.getClientChannel());									
+		ByteBuffer serverBuf = state.readBufferFor(state.getServerChannel());
 		
-		/*
-		 * state.subjectFound() devuelve TRUE si la variable currentSubject de
-		 * state NO es null hacer state.setCurrentSubject(null) cuando se
-		 * termine de parsear el mail completamente, para que devuelva FALSE la
-		 * proxima vez y empieze a buscar Subject: de nuevo
-		 * 
-		 * Usar appendToClient para mandar datos al buffer de escritura auxiliar
-		 * del cliente.
-		 * 
-		 * Hacer state.enableClientFlag(StatusEnum.WRITE) para anotar el cliente
-		 * a WRITE en el proximo updateSubscription.
-		 * 
-		 * Agregar una variable enum a POP3SocketState con el estado de la
-		 * maquina de estados.
-		 */
+		char ch = (char) serverBuf.get();
+
 		if (state.subjectFound()) {
 
 			parseChar(ch, state);
@@ -195,8 +166,7 @@ public class POP3SocketHandler implements TCPProtocol {
 				state.resetCharsMatched();
 			}
 
-			if (state.getCharsMatched() == POP3SocketState.SUBJECT_FIELD
-					.length()) {
+			if (state.getCharsMatched() == POP3SocketState.SUBJECT_FIELD.length()) {
 
 				Subject s = new Subject();
 				state.setCurrentSubject(s);
@@ -596,6 +566,7 @@ public class POP3SocketHandler implements TCPProtocol {
 				} else {
 
 					// Habia una coneccion al mismo servidor
+				    	state.enableServerFlag(StatusEnum.WRITE);
 					appendToServer(state, com.getCommandString());
 					state.updateServerSubscription(key);
 

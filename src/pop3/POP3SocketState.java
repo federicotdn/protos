@@ -254,6 +254,8 @@ public class POP3SocketState {
 		setPop3ServerHostname(null);
 		setServerConnected(false);
 		setServerChannel(null);
+		resetCharsMatched();
+		setCurrentSubject(null);
 		serverStatus = 0;
 	}
 
